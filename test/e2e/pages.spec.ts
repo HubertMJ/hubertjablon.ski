@@ -45,3 +45,30 @@ test("every page loads its scripts and styles from /site-assets/ only", async ({
     page.removeAllListeners("request");
   }
 });
+
+// "The way in" diagram: every word clear of the boxes it is not in, every box name 10 units from its
+// edges, every box inside its zone, and no horizontal scroll, at desktop and phone width.
+test("the entry diagram's words fit their boxes and nothing runs past the page", async ({ page }) => {
+  await page.goto("/");
+  const problems = await page.evaluate(() => {
+    const out: string[] = [];
+    for (const svg of document.querySelectorAll<SVGSVGElement>("svg.entry-map")) {
+      if (getComputedStyle(svg).display === "none") continue;
+      const rects = [...svg.querySelectorAll<SVGRectElement>(".em-node rect")].map((e) => e.getBBox());
+      const zones = [...svg.querySelectorAll<SVGRectElement>(".em-zone rect")].map((e) => e.getBBox());
+      for (const t of svg.querySelectorAll<SVGTextElement>("text")) {
+        const b = t.getBBox();
+        for (const r of rects) {
+          const inside = b.x >= r.x && b.x + b.width <= r.x + r.width && b.y >= r.y && b.y + b.height <= r.y + r.height;
+          const overlaps = b.x < r.x + r.width && b.x + b.width > r.x && b.y < r.y + r.height && b.y + b.height > r.y;
+          if (overlaps && !inside) out.push(`"${t.textContent}" crosses a box`);
+          if (inside && t.classList.contains("em-label") && Math.min(b.x - r.x, r.x + r.width - b.x - b.width) < 10) out.push(`"${t.textContent}" is under 10 from its box's edge`);
+        }
+      }
+      for (const r of rects) if (!zones.some((z) => r.x >= z.x && r.x + r.width <= z.x + z.width)) out.push("a box outside its zone");
+    }
+    if (document.documentElement.scrollWidth > document.documentElement.clientWidth) out.push("horizontal scroll");
+    return out;
+  });
+  expect(problems).toEqual([]);
+});

@@ -7,7 +7,7 @@ their own deployment.
 |---|---|---|
 | `/` | Landing page: intro, project cards, "The way in" diagram, About | `src/landing.html`, `src/landing.ts` |
 | `/lab/` | Detection lab, design preview: a synthetic replay of scenario C (a new hash and a new name for every copy) | `src/lab.html`, `src/ui/lab.ts`, `src/lib/lab.ts`, `src/lib/lab-replay.json` |
-| `/cluster/`, `/api` | Self-defending cluster | [self-defending-portfolio](https://github.com/HubertMJ/self-defending-portfolio) |
+| `/cluster/`, `/cluster/api` | Self-defending cluster | [self-defending-portfolio](https://github.com/HubertMJ/self-defending-portfolio) |
 
 Assets live under `/site-assets/`, not `/assets/`: both images sit behind one hostname, and
 `/assets/`, `/favicon.svg` and `/robots.txt` belong to the cluster page. The Gateway sends `/`
@@ -27,7 +27,7 @@ flowchart LR
     CFD -- HTTPS --> GW{"Cilium Gateway<br/>routes by path"}
     GW -- "/ (exact), /lab/, /site-assets/" --> SITE["ns site<br/>this repository's image"]
     GW -- "/cluster/ and every other path" --> HELLO["ns hello<br/>the cluster page"]
-    GW -- "/api" --> API["ns portfolio-api"]
+    GW -- "/cluster/api" --> API["ns portfolio-api"]
     classDef here fill:#e7f5ec,stroke:#2f855a;
     classDef other fill:#fdf0e6,stroke:#c05621;
     class SITE here;

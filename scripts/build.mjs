@@ -1,5 +1,5 @@
-// Builds src/ into dist/: content-hashed JS and CSS under dist/assets/, every page with the hashed
-// names substituted, and static/ copied as-is. The hashed names let nginx serve /assets/* as
+// Builds src/ into dist/: content-hashed JS and CSS under dist/site-assets/, every page with the hashed
+// names substituted, and static/ copied as-is. The hashed names let nginx serve /site-assets/* as
 // immutable for a year while the pages are revalidated on every visit.
 //
 //   node scripts/build.mjs                  into dist/
@@ -21,12 +21,12 @@ const PAGES = [
 ];
 
 await rm(out, { recursive: true, force: true });
-await mkdir(join(out, "assets"), { recursive: true });
+await mkdir(join(out, "site-assets"), { recursive: true });
 
 const result = await esbuild.build({
   absWorkingDir: root,
   entryPoints: ["src/landing.ts", "src/lab-page.ts", "src/theme.ts", "src/styles.css"],
-  outdir: join(out, "assets"),
+  outdir: join(out, "site-assets"),
   entryNames: "[name]-[hash]",
   bundle: true,
   minify: true,

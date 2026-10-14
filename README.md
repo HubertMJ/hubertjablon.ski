@@ -9,6 +9,10 @@ their own deployment.
 | `/lab/` | Detection lab, design preview: a synthetic replay of scenario C (a new hash and a new name for every copy) | `src/lab.html`, `src/ui/lab.ts`, `src/lib/lab.ts`, `src/lib/lab-replay.json` |
 | `/cluster/`, `/api` | Self-defending cluster | [self-defending-portfolio](https://github.com/HubertMJ/self-defending-portfolio) |
 
+Assets live under `/site-assets/`, not `/assets/`: both images sit behind one hostname, and
+`/assets/`, `/favicon.svg` and `/robots.txt` belong to the cluster page. The Gateway sends `/`
+(exact), `/lab/` and `/site-assets/` here and everything else to self-defending-portfolio.
+
 The landing page sends old single-page links (`/#verify`, `/?mock=1`, ...) on to `/cluster/`.
 
 The detection lab data is synthetic: no machine ran it, and the page says so. The real generator

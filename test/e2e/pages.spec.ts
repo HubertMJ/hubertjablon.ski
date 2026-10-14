@@ -72,3 +72,15 @@ test("the entry diagram's words fit their boxes and nothing runs past the page",
   });
   expect(problems).toEqual([]);
 });
+
+test("moving from the landing page to /lab/ is a view transition that keeps the header in place", async ({ page }) => {
+  await page.goto("/");
+  await page.addInitScript(() => {
+    addEventListener("pagereveal", (e) => {
+      (window as unknown as { vt: boolean }).vt = Boolean((e as Event & { viewTransition?: unknown }).viewTransition);
+    });
+  });
+  await Promise.all([page.waitForURL("**/lab/"), page.click('a[href="/lab/"]')]);
+  expect(await page.evaluate(() => (window as unknown as { vt?: boolean }).vt)).toBe(true);
+  expect(await page.locator(".site-header").evaluate((el) => getComputedStyle(el).viewTransitionName)).toBe("site-header");
+});

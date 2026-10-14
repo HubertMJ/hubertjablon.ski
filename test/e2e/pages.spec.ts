@@ -28,3 +28,20 @@ test.describe("landing page and /lab/", () => {
     expect(await page.evaluate(() => scrollY)).toBe(y);
   });
 });
+
+// The Gateway sends only /, /lab and /site-assets to this image (self-defending-portfolio,
+// cluster/infra/site/httproute.yaml); anything else a page loads would be answered by the cluster page.
+test("every page loads its scripts and styles from /site-assets/ only", async ({ page }) => {
+  for (const path of ["/", "/lab/"]) {
+    const local: string[] = [];
+    page.on("request", (r) => {
+      const u = new URL(r.url());
+      if (u.origin === "http://127.0.0.1:4290" && r.resourceType() !== "document") local.push(u.pathname);
+    });
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    const outside = local.filter((p) => !p.startsWith("/site-assets/") && p !== "/favicon.svg");
+    expect(outside, `${path} requests outside /site-assets/`).toEqual([]);
+    page.removeAllListeners("request");
+  }
+});

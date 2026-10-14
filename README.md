@@ -18,6 +18,42 @@ The landing page sends old single-page links (`/#verify`, `/?mock=1`, ...) on to
 The detection lab data is synthetic: no machine ran it, and the page says so. The real generator
 will live in [detection-lab](https://github.com/HubertMJ/detection-lab).
 
+## How a request reaches it
+
+```mermaid
+flowchart LR
+    V([Visitor]) -- HTTPS --> CF["Cloudflare edge<br/>TLS · WAF"]
+    CF -. tunnel, dialled out .-> CFD["cloudflared ×2<br/>k3s01, no inbound port"]
+    CFD -- HTTPS --> GW{"Cilium Gateway<br/>routes by path"}
+    GW -- "/ (exact), /lab/, /site-assets/" --> SITE["ns site<br/>this repository's image"]
+    GW -- "/cluster/ and every other path" --> HELLO["ns hello<br/>the cluster page"]
+    GW -- "/api" --> API["ns portfolio-api"]
+    classDef here fill:#e7f5ec,stroke:#2f855a;
+    classDef other fill:#fdf0e6,stroke:#c05621;
+    class SITE here;
+    class HELLO,API other;
+```
+
+Green is this repository; orange is [self-defending-portfolio](https://github.com/HubertMJ/self-defending-portfolio),
+which also holds the cluster manifests that run this image (`cluster/infra/site/`). The landing page
+draws the same path in its "The way in" section.
+
+## From commit to running pod
+
+```mermaid
+flowchart LR
+    C["push to main<br/>(or a pull request)"] --> E2E["e2e tests<br/>Playwright, read-only job"]
+    E2E --> B["image build<br/>lint, unit tests, bundle"]
+    B --> T["Trivy gate<br/>fixable CRITICAL/HIGH fail"]
+    T --> SB["SPDX SBOM"] --> SIGN["cosign keyless<br/>sign + attest"]
+    SIGN --> G[("GHCR<br/>hubertjablon.ski/site")]
+    G -- "digest pinned in<br/>self-defending-portfolio" --> ARGO["Argo CD sync"]
+    ARGO --> K{"Kyverno admission<br/>signature + SBOM by this<br/>repository's build-image.yml on main"}
+    K --> POD["ns site<br/>PSS restricted, read-only root,<br/>uid 101, no egress"]
+```
+
+Pull requests stop after the e2e tests: only `main` builds, pushes and signs.
+
 ## Develop
 
 ```sh
@@ -44,6 +80,6 @@ nginx-unprivileged on :8080 with the headers in `security-headers.conf`.
 `ghcr.io/hubertmj/hubertjablon.ski/site`, gates it with Trivy, attests an SPDX SBOM and signs it
 keylessly with cosign.
 
-Not deployed yet. Serving it needs, in self-defending-portfolio: an HTTPRoute for `/` to this
-image, the cluster page moved under `/cluster/`, an Argo CD application, and this workflow's
-identity added to the Kyverno image-verification policy.
+The cluster side (the `site` namespace, its HTTPRoute, the Argo CD application and the Kyverno
+rules that pin this workflow's identity) lives in self-defending-portfolio under
+`cluster/infra/site/`. A new image reaches the cluster when its digest is committed there.

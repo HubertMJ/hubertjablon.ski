@@ -7,10 +7,10 @@ const executablePath = process.env.PW_CHROMIUM_PATH && existsSync(process.env.PW
 
 export default defineConfig({
   testDir: "test/e2e",
-  use: { baseURL: "http://127.0.0.1:4173", launchOptions: executablePath ? { executablePath } : {} },
+  use: { baseURL: "http://127.0.0.1:4290", launchOptions: executablePath ? { executablePath } : {} },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     { name: "phone", use: { ...devices["Pixel 7"] } },
   ],
-  webServer: { command: "node scripts/serve.mjs", url: "http://127.0.0.1:4173/", reuseExistingServer: !process.env.CI },
+  webServer: { command: "node scripts/serve.mjs --port 4290", url: "http://127.0.0.1:4290/", reuseExistingServer: !process.env.CI },
 });

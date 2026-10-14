@@ -1,7 +1,7 @@
 // Serves dist/ on http://127.0.0.1:4173 for local viewing and the e2e tests. Static files only;
 // /cluster/ and /api belong to the self-defending-portfolio deployment and answer 404 here.
 //
-//   node scripts/serve.mjs [--dir dist] [--port 4173]
+//   node scripts/serve.mjs [--dir dist] [--port 4173] (the e2e tests use 4290)
 
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";

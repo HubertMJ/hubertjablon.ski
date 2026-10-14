@@ -14,6 +14,17 @@ test.describe("landing page and /lab/", () => {
     await expect(page).toHaveURL(/\/#about$/);
   });
 
+  test("About lives here alone: the whole text and the tools; the old #skills link lands on them", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#about .prose p")).toHaveCount(4);
+    await expect(page.locator("#about .prose p").first()).toHaveText(/ I love automating things: if I have done something twice, the third time a script does it\.$/);
+    await expect(page.locator("#about .skills li").first()).toHaveText("Kubernetes (k3s)");
+    await expect(page.locator('a[href="/cluster/#about"]')).toHaveCount(0);
+    await page.goto("/#skills");
+    await expect(page).toHaveURL(/\/#skills$/);
+    await expect(page.locator("#skills")).toBeInViewport();
+  });
+
   test("/lab/ renames every copy by default; picking a copy redraws the panel and never scrolls the page", async ({ page }) => {
     await page.goto("/lab/");
     await expect(page.locator(".lab-rename__box")).not.toBeChecked();

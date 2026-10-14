@@ -909,6 +909,11 @@ html[data-folded~="projects"] #projects
   background: var(--surface);
 }
 
+.about__sub {
+  margin: 1.75rem 0 0.75rem;
+  font-size: 1.05rem;
+}
+
 .projects {
   display: grid;
   gap: 1rem;

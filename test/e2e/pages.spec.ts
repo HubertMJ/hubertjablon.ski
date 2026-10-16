@@ -134,3 +134,26 @@ test("without cross-document view transitions (Firefox) the page slides by hand:
   // Back where the visitor left: the slide itself never scrolls.
   expect(Math.abs((await page.evaluate(() => scrollY)) - before)).toBeLessThan(8);
 });
+
+test("@firefox Firefox slides by hand: a page opened comes in from the right, going back the other way", async ({ page }) => {
+  await page.addInitScript(() => {
+    const seen: string[] = [];
+    (window as unknown as { slides: string[] }).slides = seen;
+    new MutationObserver(() => {
+      for (const c of document.documentElement.classList) if (c.startsWith("slide-") && !seen.includes(c)) seen.push(c);
+    }).observe(document, { attributes: true, subtree: true, attributeFilter: ["class"] });
+  });
+  const slides = () => page.evaluate(() => (window as unknown as { slides: string[] }).slides);
+  await page.goto("/");
+  await page.click('a[href="/lab/"]');
+  expect(await slides()).toEqual(["slide-out-forward"]);
+  await page.waitForURL("**/lab/");
+  await expect.poll(slides).toEqual(["slide-in-forward"]);
+  await page.click('.site-header a[href="/"]');
+  expect(await slides()).toContain("slide-out-backward");
+  await page.waitForURL((u) => u.pathname === "/");
+  await expect.poll(slides).toEqual(["slide-in-backward"]);
+  await Promise.all([page.waitForURL("**/lab/"), page.goForward()]);
+  await Promise.all([page.waitForURL((u) => u.pathname === "/"), page.goBack()]);
+  await expect.poll(slides).toContain("slide-in-backward");
+});

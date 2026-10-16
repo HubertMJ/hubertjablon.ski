@@ -40,10 +40,10 @@ jobs:
           node-version: "22"
           cache: npm
 
-      - name: e2e tests (playwright, chromium)
+      - name: e2e tests (playwright, chromium and firefox)
         run: |
           npm ci --ignore-scripts
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium firefox
           npm run test:e2e
 
       - name: upload playwright report

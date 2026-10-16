@@ -9,8 +9,11 @@ export default defineConfig({
   testDir: "test/e2e",
   use: { baseURL: "http://127.0.0.1:4290", launchOptions: executablePath ? { executablePath } : {} },
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
-    { name: "phone", use: { ...devices["Pixel 7"] } },
+    { name: "desktop", use: { ...devices["Desktop Chrome"] }, grepInvert: /@firefox/ },
+    { name: "phone", use: { ...devices["Pixel 7"] }, grepInvert: /@firefox/ },
+    // Firefox cannot animate between documents; the tests tagged @firefox check theme.ts plays the
+    // slide by hand there.
+    { name: "firefox", use: { ...devices["Desktop Firefox"], launchOptions: {} }, grep: /@firefox/ },
   ],
   webServer: { command: "node scripts/serve.mjs --port 4290", url: "http://127.0.0.1:4290/", reuseExistingServer: !process.env.CI },
 });

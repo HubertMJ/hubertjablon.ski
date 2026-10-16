@@ -153,7 +153,8 @@ test("@firefox Firefox slides by hand: a page opened comes in from the right, go
   expect(await slides()).toContain("slide-out-backward");
   await page.waitForURL((u) => u.pathname === "/");
   await expect.poll(slides).toEqual(["slide-in-backward"]);
-  await Promise.all([page.waitForURL("**/lab/"), page.goForward()]);
+  // The browser's back button: back to /lab/, then back home.
+  await Promise.all([page.waitForURL("**/lab/"), page.goBack()]);
   await Promise.all([page.waitForURL((u) => u.pathname === "/"), page.goBack()]);
   await expect.poll(slides).toContain("slide-in-backward");
 });

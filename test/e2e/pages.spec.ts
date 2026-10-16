@@ -130,7 +130,7 @@ test("without cross-document view transitions (Firefox) the page slides by hand:
   await expect.poll(slides).toEqual(["slide-in-forward"]);
   await expect.poll(() => page.evaluate(() => document.documentElement.className.includes("slide-"))).toBe(false);
   await Promise.all([page.waitForURL((u) => u.pathname === "/"), page.goBack()]);
-  await expect.poll(slides).toContain("slide-in-backward-soft");
+  await expect.poll(slides).toContain("slide-in-backward");
   // Back where the visitor left: the slide itself never scrolls.
   expect(Math.abs((await page.evaluate(() => scrollY)) - before)).toBeLessThan(8);
 });
@@ -156,5 +156,5 @@ test("@firefox Firefox slides by hand: a page opened comes in from the right, go
   // The browser's back button: back to /lab/, then back home.
   await Promise.all([page.waitForURL("**/lab/"), page.goBack()]);
   await Promise.all([page.waitForURL((u) => u.pathname === "/"), page.goBack()]);
-  await expect.poll(slides).toContain("slide-in-backward-soft");
+  await expect.poll(slides).toContain("slide-in-backward");
 });

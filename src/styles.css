@@ -1537,8 +1537,9 @@ html[data-folded~="projects"] #projects
   animation-duration: 180ms;
 }
 
-/* Between the landing page and a project the screen slides, like switching desktops on a Mac: to a
-   page further right (/ -> /cluster/ -> /lab/) everything moves left, back moves it right. The
+/* Between the landing page and a project the screen slides, like switching desktops on a Mac: the
+   cluster sits left of the landing page, the lab right of it (/cluster/ | / | /lab/). To a page
+   further right everything moves left, to one further left it moves right. The
    header stays put above the slide. theme.ts names the direction; a browser without view-transition
    types keeps the cross-fade above. */
 html:active-view-transition-type(forward, backward)::view-transition-old(root),

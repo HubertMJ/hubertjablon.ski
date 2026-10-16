@@ -9,18 +9,20 @@ try {
   // Storage blocked (private mode, sandboxed preview): the OS preference applies.
 }
 
-// The pages sit side by side like desktops: the landing page (/), then /cluster/, then /lab/. A move
-// to a page further right slides the whole screen left, a move back slides it right (styles.css,
+// The pages sit side by side like desktops, as the landing page lays out its cards: the cluster on
+// the left, the landing page (/) in the middle, the lab on the right. A move to a page further right
+// slides the whole screen left, a move to the left slides it right, so a way back always runs the
+// other way: the header's logo and the browser's or mouse's back button alike (styles.css,
 // :active-view-transition-type). Set here, in the render-blocking script, because pagereveal fires
 // before the first frame of the new page. Any other move keeps the plain cross-fade.
-const DESKTOPS = ["/", "/cluster/", "/lab/"];
+const DESKTOPS = ["/cluster/", "/", "/lab/"];
 const desktop = (url: string | undefined): number => {
   if (!url) return -1;
   try {
     const u = new URL(url, location.href);
     if (u.origin !== location.origin) return -1;
-    if (u.pathname === "/" || u.pathname === "/index.html") return 0;
-    return DESKTOPS.findIndex((p, i) => i > 0 && (u.pathname === p.slice(0, -1) || u.pathname.startsWith(p)));
+    if (u.pathname === "/" || u.pathname === "/index.html") return DESKTOPS.indexOf("/");
+    return DESKTOPS.findIndex((p) => p !== "/" && (u.pathname === p.slice(0, -1) || u.pathname.startsWith(p)));
   } catch {
     return -1;
   }

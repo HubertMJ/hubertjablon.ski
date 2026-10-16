@@ -84,7 +84,7 @@ test("the entry diagram's words fit their boxes and nothing runs past the page",
   expect(problems).toEqual([]);
 });
 
-test("moving between the landing page and /lab/ slides like switching desktops: forward to /lab/, backward home; the header stays", async ({ page }) => {
+test("moving between the landing page and /lab/ slides like switching desktops: the new page always comes in from the right, the way back too; the header stays", async ({ page }) => {
   await page.goto("/");
   // Read after theme.ts's own pagereveal listener has named the direction.
   await page.addInitScript(() => {
@@ -98,14 +98,14 @@ test("moving between the landing page and /lab/ slides like switching desktops: 
   expect(await vt()).toBe("forward");
   expect(await page.locator(".site-header").evaluate((el) => getComputedStyle(el).viewTransitionName)).toBe("site-header");
   await Promise.all([page.waitForURL((u) => u.pathname === "/"), page.goBack()]);
-  expect(await vt()).toBe("backward");
+  expect(await vt()).toBe("forward");
   // Reduced motion: no transition at all.
   await page.emulateMedia({ reducedMotion: "reduce" });
   await Promise.all([page.waitForURL("**/lab/"), page.click('a[href="/lab/"]')]);
   expect(await vt()).toBe("none");
 });
 
-test("without cross-document view transitions (Firefox) the page slides by hand: out before leaving, in from the other side, back included", async ({ page }) => {
+test("without cross-document view transitions (Firefox) the page slides by hand: out to the left, in from the right, back included", async ({ page }) => {
   await page.addInitScript(() => {
     delete (Window.prototype as unknown as { onpagereveal?: unknown }).onpagereveal;
     delete (window as unknown as { CSSViewTransitionRule?: unknown }).CSSViewTransitionRule;
@@ -125,7 +125,7 @@ test("without cross-document view transitions (Firefox) the page slides by hand:
   await expect.poll(slides).toEqual(["slide-in-forward"]);
   await expect.poll(() => page.evaluate(() => document.documentElement.className.includes("slide-"))).toBe(false);
   await Promise.all([page.waitForURL((u) => u.pathname === "/"), page.goBack()]);
-  await expect.poll(slides).toContain("slide-in-backward");
+  await expect.poll(slides).toContain("slide-in-forward");
   // Back where the visitor left: the slide itself never scrolls.
   expect(Math.abs((await page.evaluate(() => scrollY)) - before)).toBeLessThan(8);
 });

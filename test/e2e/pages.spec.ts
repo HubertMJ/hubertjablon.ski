@@ -104,3 +104,28 @@ test("moving between the landing page and /lab/ slides like switching desktops: 
   await Promise.all([page.waitForURL("**/lab/"), page.click('a[href="/lab/"]')]);
   expect(await vt()).toBe("none");
 });
+
+test("without cross-document view transitions (Firefox) the page slides by hand: out before leaving, in from the other side, back included", async ({ page }) => {
+  await page.addInitScript(() => {
+    delete (Window.prototype as unknown as { onpagereveal?: unknown }).onpagereveal;
+    delete (window as unknown as { CSSViewTransitionRule?: unknown }).CSSViewTransitionRule;
+    const seen: string[] = [];
+    (window as unknown as { slides: string[] }).slides = seen;
+    new MutationObserver(() => {
+      for (const c of document.documentElement.classList) if (c.startsWith("slide-") && !seen.includes(c)) seen.push(c);
+    }).observe(document, { attributes: true, subtree: true, attributeFilter: ["class"] });
+  });
+  const slides = () => page.evaluate(() => (window as unknown as { slides: string[] }).slides);
+  await page.goto("/");
+  await page.locator('a[href="/lab/"]').first().scrollIntoViewIfNeeded();
+  const before = await page.evaluate(() => scrollY);
+  await page.click('a[href="/lab/"]');
+  expect(await slides()).toEqual(["slide-out-forward"]);
+  await page.waitForURL("**/lab/");
+  await expect.poll(slides).toEqual(["slide-in-forward"]);
+  await expect.poll(() => page.evaluate(() => document.documentElement.className.includes("slide-"))).toBe(false);
+  await Promise.all([page.waitForURL((u) => u.pathname === "/"), page.goBack()]);
+  await expect.poll(slides).toContain("slide-in-backward");
+  // Back where the visitor left: the slide itself never scrolls.
+  expect(Math.abs((await page.evaluate(() => scrollY)) - before)).toBeLessThan(8);
+});

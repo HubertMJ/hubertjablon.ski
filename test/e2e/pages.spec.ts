@@ -84,14 +84,23 @@ test("the entry diagram's words fit their boxes and nothing runs past the page",
   expect(problems).toEqual([]);
 });
 
-test("moving from the landing page to /lab/ is a view transition that keeps the header in place", async ({ page }) => {
+test("moving between the landing page and /lab/ slides like switching desktops: forward to /lab/, backward home; the header stays", async ({ page }) => {
   await page.goto("/");
+  // Read after theme.ts's own pagereveal listener has named the direction.
   await page.addInitScript(() => {
     addEventListener("pagereveal", (e) => {
-      (window as unknown as { vt: boolean }).vt = Boolean((e as Event & { viewTransition?: unknown }).viewTransition);
+      const vt = (e as Event & { viewTransition?: { types: Set<string> } | null }).viewTransition;
+      setTimeout(() => ((window as unknown as { vt: string }).vt = vt ? [...vt.types].join(",") || "fade" : "none"));
     });
   });
+  const vt = () => page.waitForFunction(() => (window as unknown as { vt?: string }).vt).then((h) => h.jsonValue());
   await Promise.all([page.waitForURL("**/lab/"), page.click('a[href="/lab/"]')]);
-  expect(await page.evaluate(() => (window as unknown as { vt?: boolean }).vt)).toBe(true);
+  expect(await vt()).toBe("forward");
   expect(await page.locator(".site-header").evaluate((el) => getComputedStyle(el).viewTransitionName)).toBe("site-header");
+  await Promise.all([page.waitForURL((u) => u.pathname === "/"), page.goBack()]);
+  expect(await vt()).toBe("backward");
+  // Reduced motion: no transition at all.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await Promise.all([page.waitForURL("**/lab/"), page.click('a[href="/lab/"]')]);
+  expect(await vt()).toBe("none");
 });

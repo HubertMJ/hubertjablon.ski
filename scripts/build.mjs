@@ -1,5 +1,7 @@
 // Builds src/ into dist/: content-hashed JS and CSS under dist/site-assets/, every page with the hashed
-// names substituted, and static/ copied as-is. The hashed names let nginx serve /site-assets/* as
+// names substituted, and static/ copied as-is. "The way in" diagram on the landing page is drawn here
+// from src/diagram (model.ts, layout.ts): its two SVGs go into the page, its traffic's routes into the
+// stylesheet. The hashed names let nginx serve /site-assets/* as
 // immutable for a year while the pages are revalidated on every visit.
 //
 //   node scripts/build.mjs                  into dist/
@@ -20,6 +22,22 @@ const PAGES = [
   { src: "src/lab.html", out: "lab/index.html" },
 ];
 
+/** src/diagram/layout.ts's exports: bundled in memory and imported, so the page and this script share the one model. */
+async function loadDiagram() {
+  const r = await esbuild.build({ absWorkingDir: root, entryPoints: ["src/diagram/layout.ts"], bundle: true, write: false, format: "esm", platform: "neutral", logLevel: "warning" });
+  return import(`data:text/javascript;base64,${Buffer.from(r.outputFiles[0].text).toString("base64")}`);
+}
+const diagram = await loadDiagram();
+
+/** styles.css's `@import "entry-traffic.css"`: the diagram's traffic routes, generated. */
+const trafficPlugin = {
+  name: "entry-traffic",
+  setup(build) {
+    build.onResolve({ filter: /^entry-traffic\.css$/ }, () => ({ path: "entry-traffic.css", namespace: "diagram" }));
+    build.onLoad({ filter: /.*/, namespace: "diagram" }, () => ({ contents: diagram.trafficCss(), loader: "css" }));
+  },
+};
+
 await rm(out, { recursive: true, force: true });
 await mkdir(join(out, "site-assets"), { recursive: true });
 
@@ -35,9 +53,10 @@ const result = await esbuild.build({
   metafile: true,
   legalComments: "none",
   logLevel: "warning",
+  plugins: [trafficPlugin],
 });
 
-const names = {};
+const names = { "diagram.wide": diagram.svg(diagram.wide()), "diagram.narrow": diagram.svg(diagram.narrow()) };
 for (const [file, meta] of Object.entries(result.metafile.outputs)) {
   if (!meta.entryPoint) continue;
   const ext = file.endsWith(".css") ? "css" : "js";
@@ -52,4 +71,4 @@ for (const p of PAGES) {
   await writeFile(join(out, p.out), html);
 }
 await cp(join(root, "static"), out, { recursive: true });
-console.log(`built: ${Object.values(names).join(", ")}`);
+console.log(`built: ${Object.values(names).filter((n) => !n.startsWith("<")).join(", ")}`);

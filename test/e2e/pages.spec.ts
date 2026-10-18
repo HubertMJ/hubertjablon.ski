@@ -58,7 +58,8 @@ test("every page loads its scripts and styles from /site-assets/ only", async ({
 });
 
 // "The way in" diagram: every word clear of the boxes it is not in, every box name 10 units from its
-// edges, every box inside its zone, and no horizontal scroll, at desktop and phone width.
+// edges, every box inside its zone, no arrow through a box, no label on a line or another label, and
+// no horizontal scroll, at desktop and phone width.
 test("the entry diagram's words fit their boxes and nothing runs past the page", async ({ page }) => {
   await page.goto("/");
   const problems = await page.evaluate(() => {
@@ -77,6 +78,30 @@ test("the entry diagram's words fit their boxes and nothing runs past the page",
         }
       }
       for (const r of rects) if (!zones.some((z) => r.x >= z.x && r.x + r.width <= z.x + z.width)) out.push("a box outside its zone");
+      // No arrow runs through a box: it leaves one at its edge and stops at the next one's.
+      for (const e of svg.querySelectorAll<SVGPathElement>(".em-edge")) {
+        for (let l = 0; l <= e.getTotalLength(); l += 2) {
+          const p = e.getPointAtLength(l);
+          if (rects.some((r) => p.x > r.x + 1 && p.x < r.x + r.width - 1 && p.y > r.y + 1 && p.y < r.y + r.height - 1)) {
+            out.push(`an arrow runs through a box at ${Math.round(p.x)},${Math.round(p.y)}`);
+            break;
+          }
+        }
+      }
+      // Edge labels clear of each other and of the lines.
+      const labels = [...svg.querySelectorAll<SVGTextElement>(".em-edge-label")].map((t) => [t.textContent, t.getBBox()] as const);
+      for (const [i, [a, ba]] of labels.entries()) {
+        for (const [b, bb] of labels.slice(i + 1)) if (ba.x < bb.x + bb.width && ba.x + ba.width > bb.x && ba.y < bb.y + bb.height && ba.y + ba.height > bb.y) out.push(`"${a}" overlaps "${b}"`);
+        for (const e of svg.querySelectorAll<SVGPathElement>(".em-edge")) {
+          for (let l = 0; l <= e.getTotalLength(); l += 2) {
+            const p = e.getPointAtLength(l);
+            if (p.x > ba.x && p.x < ba.x + ba.width && p.y > ba.y && p.y < ba.y + ba.height) {
+              out.push(`"${a}" sits on a line`);
+              break;
+            }
+          }
+        }
+      }
     }
     if (document.documentElement.scrollWidth > document.documentElement.clientWidth) out.push("horizontal scroll");
     return out;
@@ -133,6 +158,12 @@ test("without cross-document view transitions (Firefox) the page slides by hand:
   await expect.poll(slides).toContain("slide-in-backward");
   // Back where the visitor left: the slide itself never scrolls.
   expect(Math.abs((await page.evaluate(() => scrollY)) - before)).toBeLessThan(8);
+  // A box in "The way in" diagram (an <a> inside the SVG) slides the same way.
+  await page.goto("/");
+  await page.evaluate(() => ((window as unknown as { slides: string[] }).slides.length = 0));
+  await page.locator('svg.entry-map:visible a[data-node="lab"]').click();
+  expect(await slides()).toEqual(["slide-out-forward"]);
+  await page.waitForURL("**/lab/");
 });
 
 test("@firefox Firefox slides by hand: a page opened comes in from the right, going back the other way", async ({ page }) => {
@@ -157,4 +188,79 @@ test("@firefox Firefox slides by hand: a page opened comes in from the right, go
   await Promise.all([page.waitForURL("**/lab/"), page.goBack()]);
   await Promise.all([page.waitForURL((u) => u.pathname === "/"), page.goBack()]);
   await expect.poll(slides).toContain("slide-in-backward");
+});
+
+// "The way in" diagram, drawn from src/diagram at build time: a dot runs each route (CSS only, not
+// with reduced motion), every page but this one is a link that slides its page in, and the page itself
+// never moves.
+test.describe("the way in", () => {
+  const visible = "svg.entry-map:visible";
+  const dots = (page: import("@playwright/test").Page) =>
+    page.locator(`${visible} .em-dot`).evaluateAll((ds) => ds.map((d) => `${getComputedStyle(d).display}:${d.getAnimations().map((a) => a.playState).join(",")}`));
+
+  test("a dot runs each route; none with reduced motion", async ({ page }) => {
+    await page.goto("/");
+    expect(await dots(page)).toEqual(Array(4).fill("inline:running"));
+    // It moves: two looks a moment apart see it somewhere else.
+    const at = () => page.locator(`${visible} .em-dot`).first().evaluate((d) => d.getBoundingClientRect().x);
+    await page.locator(visible).scrollIntoViewIfNeeded();
+    await page.waitForTimeout(900);
+    const x0 = await at();
+    await page.waitForTimeout(400);
+    expect(await at()).not.toBe(x0);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.reload();
+    expect(await dots(page)).toEqual(Array(4).fill("none:"));
+  });
+
+  test("every box but this page's opens its page, sliding in from the right; this page's is not a link", async ({ page }) => {
+    // The cluster's pages come from the other repository: a stand-in with this site's head, so the
+    // cross-document transition runs as it does live.
+    await page.goto("/");
+    const head = await page.evaluate(() => [...document.querySelectorAll('head link[rel="stylesheet"], head script:not([type])')].map((e) => e.outerHTML).join(""));
+    const csp = (await page.request.get("/")).headers()["content-security-policy"];
+    await page.route("**/cluster/**", (r) => r.fulfill({ contentType: "text/html", headers: { "content-security-policy": csp }, body: `<!DOCTYPE html><html><head><title>cluster</title>${head}</head><body><header class="site-header"><a href="/">home</a></header><main>cluster</main></body></html>` }));
+    await page.addInitScript(() => {
+      addEventListener("pagereveal", (e) => {
+        const vt = (e as Event & { viewTransition?: { types: Set<string> } | null }).viewTransition;
+        setTimeout(() => ((window as unknown as { vt: string }).vt = vt ? [...vt.types].join(",") || "fade" : "none"));
+      });
+    });
+    const want: Record<string, RegExp> = { lab: /\/lab\/$/, cluster: /\/cluster\/$/, api: /\/cluster\/#verify$/ };
+    for (const [node, url] of Object.entries(want)) {
+      await page.goto("/");
+      const link = page.locator(`${visible} a[data-node="${node}"]`);
+      await link.scrollIntoViewIfNeeded();
+      await Promise.all([page.waitForURL(url), link.click()]);
+      expect(await page.waitForFunction(() => (window as unknown as { vt?: string }).vt).then((h) => h.jsonValue()), node).toBe("forward");
+    }
+    await page.goto("/");
+    const here = page.locator(`${visible} [data-node="home"]`);
+    await expect(here).toHaveAttribute("aria-current", "page");
+    expect(await here.evaluate((g) => g.closest("a"))).toBeNull();
+    await here.scrollIntoViewIfNeeded();
+    const y = await page.evaluate(() => scrollY);
+    await here.click();
+    await page.waitForTimeout(300);
+    expect(page.url()).toMatch(/\/$/);
+    expect(await page.evaluate(() => scrollY)).toBe(y);
+  });
+
+  test("the page loads where it starts, without a console error, inline style or policy violation", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+    page.on("pageerror", (e) => errors.push(String(e)));
+    await page.addInitScript(() => {
+      addEventListener("securitypolicyviolation", (e) => console.error(`CSP: ${e.violatedDirective} ${e.blockedURI}`));
+    });
+    for (const path of ["/", "/lab/"]) {
+      const res = await page.goto(path);
+      expect(res?.headers()["content-security-policy"]).toContain("require-trusted-types-for 'script'");
+      await page.waitForTimeout(1200);
+      expect(await page.evaluate(() => scrollY), `${path} scrolled by itself`).toBe(0);
+      // As served (a script may still set a size through the CSSOM, which the CSP allows).
+      expect(await res?.text(), `${path} inline styles`).not.toMatch(/<style|\sstyle=/);
+    }
+    expect(errors).toEqual([]);
+  });
 });

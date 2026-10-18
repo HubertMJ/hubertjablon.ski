@@ -7,7 +7,8 @@
  * label next to it.
  */
 
-/* The hero diagram's ambient traffic routes, generated from src/diagram at build time (scripts/build.mjs). */
+/* "The way in" diagram's traffic routes, generated from src/diagram at build time (scripts/build.mjs). */
+@import "entry-traffic.css";
 
 :root {
   color-scheme: dark;
@@ -1506,9 +1507,62 @@ html[data-folded~="projects"] #projects
   fill: var(--text-muted);
 }
 
+.em-edge--tunnel {
+  stroke-dasharray: 5 4;
+}
+
+/* A box that opens a page carries an arrow; the page the visitor is on, a dot instead. */
+.em-go {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.em-here {
+  fill: var(--accent);
+}
+
+.em-link {
+  cursor: pointer;
+}
+
 .em-link:hover rect,
 .em-link:focus-visible rect {
   stroke-width: 2.5;
+}
+
+.em-link:hover .em-go,
+.em-link:focus-visible .em-go {
+  stroke: var(--text);
+}
+
+/* The traffic: every 4 s a dot runs from the visitor to one of the pages, each in turn. Its route and
+   timing are generated (entry-traffic.css, offset-path, so it moves by transform). Not drawn at all
+   where motion is not wanted. */
+.em-dot {
+  display: none;
+  offset-rotate: 0deg;
+  opacity: 0;
+}
+
+.em-dot--site {
+  fill: var(--accent);
+  filter: drop-shadow(0 0 3px var(--accent));
+}
+
+.em-dot--project {
+  fill: var(--attack);
+  filter: drop-shadow(0 0 3px var(--attack));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .em-dot {
+    display: inline;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
 }
 
 .em-link:focus-visible {

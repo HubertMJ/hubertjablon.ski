@@ -5,7 +5,7 @@ their own deployment.
 
 | Path | What | Source |
 |---|---|---|
-| `/` | Landing page: intro, project cards, "The way in" diagram, About | `src/landing.html`, `src/landing.ts` |
+| `/` | Landing page: intro, project cards, "The way in" diagram, About | `src/landing.html`, `src/landing.ts`, `src/diagram/` |
 | `/lab/` | Detection lab, design preview: a synthetic replay of scenario C (a new hash and a new name for every copy) | `src/lab.html`, `src/ui/lab.ts`, `src/lib/lab.ts`, `src/lib/lab-replay.json` |
 | `/cluster/`, `/cluster/api` | Self-defending cluster | [self-defending-portfolio](https://github.com/HubertMJ/self-defending-portfolio) |
 
@@ -26,17 +26,21 @@ flowchart LR
     CF -. tunnel, dialled out .-> CFD["cloudflared ×2<br/>k3s01, no inbound port"]
     CFD -- HTTPS --> GW{"Cilium Gateway<br/>routes by path"}
     GW -- "/ (exact), /lab/, /site-assets/" --> SITE["ns site<br/>this repository's image"]
+    SITE -- "/" --> HOME["This site<br/>the landing page"]
+    SITE -- "/lab/" --> LAB["Detection lab<br/>design preview"]
     GW -- "/cluster/ and every other path" --> HELLO["ns hello<br/>the cluster page"]
     GW -- "/cluster/api" --> API["ns portfolio-api"]
     classDef here fill:#e7f5ec,stroke:#2f855a;
     classDef other fill:#fdf0e6,stroke:#c05621;
-    class SITE here;
+    class SITE,HOME,LAB here;
     class HELLO,API other;
 ```
 
 Green is this repository; orange is [self-defending-portfolio](https://github.com/HubertMJ/self-defending-portfolio),
 which also holds the cluster manifests that run this image (`cluster/infra/site/`). The landing page
-draws the same path in its "The way in" section.
+draws the same path in its "The way in" section, from `src/diagram/model.ts` at build time
+(`scripts/build.mjs`): a dot runs each route in turn (not with reduced motion), and every box but
+the page you are on opens its page. A unit test holds this diagram to the model's routes.
 
 ## From commit to running pod
 

@@ -1,16 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 // This repository serves only the landing page (/). The detection lab (/lab/) and the cluster
 // (/cluster/) come from other repositories' images; the Gateway serves them at those same-origin
-// paths. Locally we stand them in with this site's own head, so a cross-document transition to one
-// runs under the real stylesheet and scripts, exactly as it does live.
-async function standIn(page: Page, ...globs: string[]): Promise<void> {
-  const head = await page.evaluate(() => [...document.querySelectorAll('head link[rel="stylesheet"], head script:not([type])')].map((e) => e.outerHTML).join(""));
-  const csp = (await page.request.get("/")).headers()["content-security-policy"];
-  for (const g of globs) {
-    await page.route(g, (r) => r.fulfill({ contentType: "text/html", headers: { "content-security-policy": csp }, body: `<!DOCTYPE html><html><head><title>stand-in</title>${head}</head><body><header class="site-header"><a href="/">home</a></header><main>stand-in</main></body></html>` }));
-  }
-}
+// paths. For the slide tests, scripts/serve.mjs --e2e stands them in with this site's own head, so a
+// cross-document transition to one runs under the real stylesheet and scripts, exactly as it does
+// live (a real served page, so it works in Firefox too, where route interception misses navigations).
 
 test.describe("landing page", () => {
   test("the landing page lists both projects and sends the old single page's links on to /cluster/", async ({ page }) => {
@@ -108,8 +102,6 @@ test("the entry diagram's words fit their boxes and nothing runs past the page",
 
 test("moving between the landing page and /lab/ slides like switching desktops: a page opened comes in from the right, going back slides the other way; the header stays", async ({ page }) => {
   await page.goto("/");
-  // /lab/ comes from the detection-lab image; stand it in so the transition to it runs locally.
-  await standIn(page, "**/lab/**");
   // Read after theme.ts's own pagereveal listener has named the direction.
   await page.addInitScript(() => {
     addEventListener("pagereveal", (e) => {
@@ -146,8 +138,6 @@ test("without cross-document view transitions (Firefox) the page slides by hand:
   });
   const slides = () => page.evaluate(() => (window as unknown as { slides: string[] }).slides);
   await page.goto("/");
-  // /lab/ comes from the detection-lab image; stand it in so the hand-played slide to it runs locally.
-  await standIn(page, "**/lab/**");
   await page.locator('a[href="/lab/"]').first().scrollIntoViewIfNeeded();
   const before = await page.evaluate(() => scrollY);
   await page.click('a[href="/lab/"]');
@@ -177,8 +167,6 @@ test("@firefox Firefox slides by hand: a page opened comes in from the right, go
   });
   const slides = () => page.evaluate(() => (window as unknown as { slides: string[] }).slides);
   await page.goto("/");
-  // /lab/ comes from the detection-lab image; stand it in so the hand-played slide to it runs locally.
-  await standIn(page, "**/lab/**");
   await page.click('a[href="/lab/"]');
   expect(await slides()).toEqual(["slide-out-forward"]);
   await page.waitForURL("**/lab/");
@@ -220,7 +208,6 @@ test.describe("the way in", () => {
     // The lab and the cluster come from other repositories' images: stand-ins with this site's head,
     // so the cross-document transition to each runs as it does live.
     await page.goto("/");
-    await standIn(page, "**/cluster/**", "**/lab/**");
     await page.addInitScript(() => {
       addEventListener("pagereveal", (e) => {
         const vt = (e as Event & { viewTransition?: { types: Set<string> } | null }).viewTransition;

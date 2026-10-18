@@ -99,13 +99,17 @@ if (!nativeSlide) {
   });
   addEventListener("click", (e) => {
     if (calm?.matches || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    const a = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
-    if (!a || (a.target && a.target !== "_self") || a.hasAttribute("download")) return;
+    // Attributes, not a.href and a.target: an <a> in an SVG (the landing page's diagram) has them as
+    // SVGAnimatedString objects.
+    const a = (e.target as Element | null)?.closest?.("a[href]");
+    const target = a?.getAttribute("target");
+    if (!a || (target && target !== "_self") || a.hasAttribute("download")) return;
+    const href = new URL(a.getAttribute("href") ?? "", location.href).href;
     const from = desktop(location.href);
-    const to = desktop(a.href);
+    const to = desktop(href);
     if (from < 0 || to < 0 || from === to) return;
     e.preventDefault();
-    play(`slide-out-${way(to)}`, 220, () => location.assign(a.href));
+    play(`slide-out-${way(to)}`, 220, () => location.assign(href));
   });
 }
 

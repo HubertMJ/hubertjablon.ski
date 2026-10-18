@@ -2,8 +2,8 @@
 // scripts/build.mjs draws it into the page (layout.ts: a wide and a phone drawing, and the stylesheet
 // that moves the traffic along it); a unit test holds README.md's diagram to the same routes.
 
-/** A box's colour: the path every request takes, this repository's pages, the cluster's. */
-export type Role = "path" | "site" | "project";
+/** A box's colour: the path every request takes, this site's pages, the self-defending cluster's, the detection lab's. */
+export type Role = "path" | "site" | "project" | "lab";
 
 export interface Hop {
   id: string;
@@ -39,7 +39,7 @@ export const HOPS: Hop[] = [
 /** Where the Gateway sends each path, top to bottom. */
 export const DESTINATIONS: Destination[] = [
   { id: "home", label: "This site", repo: "hubertjablon.ski", role: "site", route: "/" },
-  { id: "lab", label: "Detection lab", repo: "hubertjablon.ski", role: "site", route: "/lab/", href: "/lab/" },
+  { id: "lab", label: "Detection lab", repo: "detection-lab", role: "lab", route: "/lab/", href: "/lab/" },
   { id: "cluster", label: "Self-defending cluster", repo: "self-defending-portfolio", role: "project", route: "/cluster/", href: "/cluster/" },
   { id: "api", label: "Cluster API", repo: "self-defending-portfolio", role: "project", route: "/cluster/api", href: "/cluster/#verify" },
 ];

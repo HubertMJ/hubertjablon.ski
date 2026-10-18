@@ -16,6 +16,19 @@ describe("the way in (landing page diagram)", () => {
     expect(HOPS.map((h) => h.label)).toEqual(["Visitor", "Cloudflare edge", "cloudflared ×2", "Cilium Gateway"]);
   });
 
+  it("the detection lab is its own project, in a colour of its own", () => {
+    const lab = DESTINATIONS.find((d) => d.id === "lab");
+    expect(lab?.repo).toBe("detection-lab");
+    expect(lab?.role).toBe("lab");
+    // Three destination colours read on the drawing: this site, the cluster, the lab.
+    expect(new Set(DESTINATIONS.map((d) => d.role))).toEqual(new Set(["site", "project", "lab"]));
+    for (const dr of [wide(), narrow()]) {
+      const s = svg(dr);
+      expect(s).toContain(`class="em-node em-lab"`);
+      expect(s).toContain(`em-dot--lab`);
+    }
+  });
+
   it("every page but this one is a link to it; the page you are on is not a link", () => {
     for (const dr of [wide(), narrow()]) {
       const s = svg(dr);

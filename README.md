@@ -25,20 +25,24 @@ flowchart LR
     V([Visitor]) -- HTTPS --> CF["Cloudflare edge<br/>TLS · WAF"]
     CF -. tunnel, dialled out .-> CFD["cloudflared ×2<br/>k3s01, no inbound port"]
     CFD -- HTTPS --> GW{"Cilium Gateway<br/>routes by path"}
-    GW -- "/ (exact), /lab/, /site-assets/" --> SITE["ns site<br/>this repository's image"]
+    GW -- "/ (exact), /site-assets/" --> SITE["ns site<br/>this repository's image"]
     SITE -- "/" --> HOME["This site<br/>the landing page"]
-    SITE -- "/lab/" --> LAB["Detection lab<br/>design preview"]
+    GW -- "/lab/" --> LAB["Detection lab<br/>the detection-lab image"]
     GW -- "/cluster/ and every other path" --> HELLO["ns hello<br/>the cluster page"]
     GW -- "/cluster/api" --> API["ns portfolio-api"]
     classDef here fill:#e7f5ec,stroke:#2f855a;
     classDef other fill:#fdf0e6,stroke:#c05621;
-    class SITE,HOME,LAB here;
+    classDef lab fill:#f1e9fd,stroke:#7c3aed;
+    class SITE,HOME here;
     class HELLO,API other;
+    class LAB lab;
 ```
 
 Green is this repository; orange is [self-defending-portfolio](https://github.com/HubertMJ/self-defending-portfolio),
-which also holds the cluster manifests that run this image (`cluster/infra/site/`). The landing page
-draws the same path in its "The way in" section, from `src/diagram/model.ts` at build time
+which also holds the cluster manifests that run this image (`cluster/infra/site/`); violet is
+[detection-lab](https://github.com/HubertMJ/detection-lab), which builds and runs the `/lab/` page's
+own image. The landing page draws the same path in its "The way in" section, from
+`src/diagram/model.ts` at build time
 (`scripts/build.mjs`): a dot runs each route in turn (not with reduced motion), and every box but
 the page you are on opens its page. A unit test holds this diagram to the model's routes.
 

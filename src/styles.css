@@ -28,6 +28,7 @@
   --respond: #5ee0a4;
   --role-entry: #6cb6ff;
   --role-record: #b392f0;
+  --role-lab: #c08af2;
   --role-tint: 13%;
   --good: #3fcf6b;
   --warning: #f4bf4f;
@@ -67,6 +68,7 @@
     --respond: #047a52;
     --role-entry: #0969da;
     --role-record: #8250df;
+    --role-lab: #7c3aed;
     --role-tint: 9%;
     --good: #12823b;
     --warning: #9a6700;
@@ -100,6 +102,7 @@
   --respond: #047a52;
   --role-entry: #0969da;
   --role-record: #8250df;
+  --role-lab: #7c3aed;
   --role-tint: 9%;
   --good: #12823b;
   --warning: #9a6700;
@@ -1480,6 +1483,11 @@ html[data-folded~="projects"] #projects
   fill: color-mix(in srgb, var(--attack) var(--role-tint), var(--surface));
 }
 
+.em-lab rect {
+  stroke: var(--role-lab);
+  fill: color-mix(in srgb, var(--role-lab) var(--role-tint), var(--surface));
+}
+
 .em-label {
   font: 650 14px var(--font-sans);
   fill: var(--text);
@@ -1555,6 +1563,11 @@ html[data-folded~="projects"] #projects
 .em-dot--project {
   fill: var(--attack);
   filter: drop-shadow(0 0 3px var(--attack));
+}
+
+.em-dot--lab {
+  fill: var(--role-lab);
+  filter: drop-shadow(0 0 3px var(--role-lab));
 }
 
 @media (prefers-reduced-motion: no-preference) {

@@ -6,17 +6,17 @@ their own deployment.
 | Path | What | Source |
 |---|---|---|
 | `/` | Landing page: intro, project cards, "The way in" diagram, About | `src/landing.html`, `src/landing.ts`, `src/diagram/` |
-| `/lab/` | Detection lab, design preview: a synthetic replay of scenario C (a new hash and a new name for every copy) | `src/lab.html`, `src/ui/lab.ts`, `src/lib/lab.ts`, `src/lib/lab-replay.json` |
 | `/cluster/`, `/cluster/api` | Self-defending cluster | [self-defending-portfolio](https://github.com/HubertMJ/self-defending-portfolio) |
 
 Assets live under `/site-assets/`, not `/assets/`: both images sit behind one hostname, and
 `/assets/`, `/favicon.svg` and `/robots.txt` belong to the cluster page. The Gateway sends `/`
-(exact), `/lab/` and `/site-assets/` here and everything else to self-defending-portfolio.
+(exact) and `/site-assets/` here and everything else to self-defending-portfolio.
 
 The landing page sends old single-page links (`/#verify`, `/?mock=1`, ...) on to `/cluster/`.
 
-The detection lab data is synthetic: no machine ran it, and the page says so. The real generator
-will live in [detection-lab](https://github.com/HubertMJ/detection-lab).
+The detection lab page lives in its own repository, [detection-lab](https://github.com/HubertMJ/detection-lab),
+with its own deployed image; the Gateway serves `/lab/` from it. The landing page keeps the Detection
+lab card and diagram node, which link to `/lab/`.
 
 ## How a request reaches it
 

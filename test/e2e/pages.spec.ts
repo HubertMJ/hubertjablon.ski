@@ -1,8 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-// The landing page (/) and the detection lab's preview (/lab/), beside the cluster page (/cluster/).
+// This repository serves only the landing page (/). The detection lab (/lab/) and the cluster
+// (/cluster/) come from other repositories' images; the Gateway serves them at those same-origin
+// paths. For the slide tests, scripts/serve.mjs --e2e stands them in with this site's own head, so a
+// cross-document transition to one runs under the real stylesheet and scripts, exactly as it does
+// live (a real served page, so it works in Firefox too, where route interception misses navigations).
 
-test.describe("landing page and /lab/", () => {
+test.describe("landing page", () => {
   test("the landing page lists both projects and sends the old single page's links on to /cluster/", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator(".card")).toHaveCount(2);
@@ -25,25 +29,12 @@ test.describe("landing page and /lab/", () => {
     await expect(page.locator("#skills")).toBeInViewport();
   });
 
-  test("/lab/ renames every copy by default; picking a copy redraws the panel and never scrolls the page", async ({ page }) => {
-    await page.goto("/lab/");
-    await expect(page.locator(".lab-rename__box")).not.toBeChecked();
-    await page.locator(".lab-picker").scrollIntoViewIfNeeded();
-    const y = await page.evaluate(() => scrollY);
-    await page.evaluate(() => document.querySelector<HTMLButtonElement>('.lab-picker__btn[data-n="4"]')?.click());
-    await expect(page.locator(".lab-incident")).toHaveAttribute("data-open", "true");
-    await expect(page.locator(".lab-kv__row[data-changed=true]")).toHaveCount(2);
-    expect(await page.evaluate(() => scrollY)).toBe(y);
-    await page.evaluate(() => document.querySelector<HTMLInputElement>(".lab-rename__box")?.click());
-    await expect(page.locator(".lab-kv__row[data-changed=true]")).toHaveCount(1);
-    expect(await page.evaluate(() => scrollY)).toBe(y);
-  });
 });
 
-// The Gateway sends only /, /lab and /site-assets to this image (self-defending-portfolio,
+// The Gateway sends only / and /site-assets to this image (self-defending-portfolio,
 // cluster/infra/site/httproute.yaml); anything else a page loads would be answered by the cluster page.
 test("every page loads its scripts and styles from /site-assets/ only", async ({ page }) => {
-  for (const path of ["/", "/lab/"]) {
+  for (const path of ["/"]) {
     const local: string[] = [];
     page.on("request", (r) => {
       const u = new URL(r.url());
@@ -214,12 +205,9 @@ test.describe("the way in", () => {
   });
 
   test("every box but this page's opens its page, sliding in from the right; this page's is not a link", async ({ page }) => {
-    // The cluster's pages come from the other repository: a stand-in with this site's head, so the
-    // cross-document transition runs as it does live.
+    // The lab and the cluster come from other repositories' images: stand-ins with this site's head,
+    // so the cross-document transition to each runs as it does live.
     await page.goto("/");
-    const head = await page.evaluate(() => [...document.querySelectorAll('head link[rel="stylesheet"], head script:not([type])')].map((e) => e.outerHTML).join(""));
-    const csp = (await page.request.get("/")).headers()["content-security-policy"];
-    await page.route("**/cluster/**", (r) => r.fulfill({ contentType: "text/html", headers: { "content-security-policy": csp }, body: `<!DOCTYPE html><html><head><title>cluster</title>${head}</head><body><header class="site-header"><a href="/">home</a></header><main>cluster</main></body></html>` }));
     await page.addInitScript(() => {
       addEventListener("pagereveal", (e) => {
         const vt = (e as Event & { viewTransition?: { types: Set<string> } | null }).viewTransition;
@@ -253,7 +241,7 @@ test.describe("the way in", () => {
     await page.addInitScript(() => {
       addEventListener("securitypolicyviolation", (e) => console.error(`CSP: ${e.violatedDirective} ${e.blockedURI}`));
     });
-    for (const path of ["/", "/lab/"]) {
+    for (const path of ["/"]) {
       const res = await page.goto(path);
       expect(res?.headers()["content-security-policy"]).toContain("require-trusted-types-for 'script'");
       await page.waitForTimeout(1200);

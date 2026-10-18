@@ -27,15 +27,15 @@ RUN npm run lint && npm test && npm run build
 
 # nginx-unprivileged rather than nginx because the stock image starts as root to bind :80, which
 # PSS `restricted` forbids (self-defending-portfolio, cluster/infra/hello/deployment.yaml).
-FROM nginxinc/nginx-unprivileged:1.31.6-alpine@sha256:26b0bf6fbf07297983cb341998d79c831508787de26627dd2a112321b9c3a4af
+FROM nginxinc/nginx-unprivileged:1.31.7-alpine@sha256:378d0c32f6562f7fd9629170797f57d2b953aa09be983b3daaf4809bb039ca00
 
 # Build-time only; the running container never reads these. USER is restored below.
 USER root
 
-# The pinned base ships pcre2 10.48-r0 and tiff 4.7.1-r0, which Trivy gates on CVE-2026-103111 (HIGH,
-# fixed in pcre2 10.49-r0) and CVE-2026-4775 (HIGH, fixed in tiff 4.7.2-r0). Upgraded in place from
-# Alpine's repositories until the next base-image bump carries the fixes; then this line goes.
-RUN apk --no-cache upgrade pcre2 tiff
+# The pinned base ships libexpat 2.8.5-r0, which Trivy gates on CVE-2026-77214 (HIGH, fixed in
+# libexpat 2.9.0-r0). Upgraded in place from Alpine's repositories until the next base-image bump
+# carries the fix; then this line goes.
+RUN apk --no-cache upgrade libexpat
 
 # Our nginx.conf includes no conf.d, so the shipped default vhost is dead config. It is removed
 # rather than left in place because the base image's 10-listen-on-ipv6-by-default.sh entrypoint

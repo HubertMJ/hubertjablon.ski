@@ -23,6 +23,8 @@ COPY scripts/ scripts/
 COPY src/ src/
 COPY static/ static/
 COPY test/unit/ test/unit/
+# The diagram unit test reads README.md to check the mermaid "the way in" diagram matches the model.
+COPY README.md ./
 RUN npm run lint && npm test && npm run build
 
 # nginx-unprivileged rather than nginx because the stock image starts as root to bind :80, which

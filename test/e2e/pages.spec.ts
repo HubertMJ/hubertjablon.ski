@@ -10,8 +10,9 @@ test.describe("landing page", () => {
   test("the landing page lists both projects and sends the old single page's links on to /cluster/", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator(".card")).toHaveCount(2);
-    await expect(page.locator(".card--live .card__title a")).toHaveAttribute("href", "/cluster/");
-    await expect(page.locator(".card--preview .card__title a")).toHaveAttribute("href", "/lab/");
+    // Both projects are live now, so match each card by its link, not its status class.
+    await expect(page.locator('.card--live .card__title a[href="/cluster/"]')).toHaveCount(1);
+    await expect(page.locator('.card--live .card__title a[href="/lab/"]')).toHaveCount(1);
     await page.goto("/#verify");
     await expect(page).toHaveURL(/\/cluster\/#verify$/);
     await page.goto("/#about");

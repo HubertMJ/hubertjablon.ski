@@ -1025,10 +1025,6 @@ html[data-folded~="projects"] #projects
   border-top-color: var(--good);
 }
 
-.card--preview {
-  border-top-color: var(--warning);
-}
-
 .card p {
   margin: 0;
 }

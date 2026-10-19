@@ -34,10 +34,10 @@ FROM nginxinc/nginx-unprivileged:1.31.7-alpine@sha256:378d0c32f6562f7fd962917079
 # Build-time only; the running container never reads these. USER is restored below.
 USER root
 
-# The pinned base ships libexpat 2.8.5-r0, which Trivy gates on CVE-2026-77214 (HIGH, fixed in
-# libexpat 2.9.0-r0). Upgraded in place from Alpine's repositories until the next base-image bump
-# carries the fix; then this line goes.
-RUN apk --no-cache upgrade libexpat
+# The pinned base ships two packages Trivy gates on: libexpat 2.8.5-r0 (CVE-2026-77214, HIGH, fixed
+# in 2.9.0-r0) and libx11 1.8.13-r0 (CVE-2026-88806, HIGH, fixed in 1.8.14-r0). Upgraded in place
+# from Alpine's repositories until the next base-image bump carries the fixes; then this line goes.
+RUN apk --no-cache upgrade libexpat libx11
 
 # Our nginx.conf includes no conf.d, so the shipped default vhost is dead config. It is removed
 # rather than left in place because the base image's 10-listen-on-ipv6-by-default.sh entrypoint

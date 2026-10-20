@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { narrow, svg, trafficCss, wide } from "../../src/diagram/layout";
-import { DESTINATIONS, HOPS } from "../../src/diagram/model";
+import { DESTINATIONS, FEED, FEED_EDGES, HOPS } from "../../src/diagram/model";
 
 const readme = readFileSync(join(__dirname, "../../README.md"), "utf8");
 const mermaid = readme.split("## How a request reaches it")[1].split("```")[1];
@@ -40,6 +40,21 @@ describe("the way in (landing page diagram)", () => {
     }
     expect(DESTINATIONS.find((d) => d.route === "/")?.href).toBeUndefined();
     expect(DESTINATIONS.find((d) => d.route === "/lab/")?.href).toBe("/lab/");
+  });
+
+  it("below the routes, the lab's feed: runner and VM into the SIEM, the SIEM's run documents up to the API; no traffic runs it", () => {
+    for (const f of Object.values(FEED)) expect(mermaid).toContain(f.label);
+    for (const label of Object.values(FEED_EDGES)) expect(mermaid).toContain(`"${label}"`);
+    for (const dr of [wide(), narrow()]) {
+      const s = svg(dr);
+      for (const f of Object.values(FEED)) expect(s).toContain(`class="em-node em-${f.role}" data-node="${f.id}"`);
+      expect(dr.feed).toHaveLength(3);
+      // The feed's last edge ends at the Cluster API's box.
+      const api = dr.boxes.get("api");
+      const end = dr.feed[2].pts.at(-1);
+      expect(api && end && end[0] >= api.x && end[0] <= api.x + api.w + 2 && end[1] >= api.y && end[1] <= api.y + api.h + 2).toBe(true);
+    }
+    expect(trafficCss()).not.toContain("lab-vm");
   });
 
   it("the traffic has a route and keyframes for every page in both drawings", () => {

@@ -44,9 +44,32 @@ export const DESTINATIONS: Destination[] = [
   { id: "api", label: "Cluster API", repo: "self-defending-portfolio", role: "project", route: "/cluster/api", href: "/cluster/#verify" },
 ];
 
+/**
+ * Off the request path: where the run /lab/ shows comes from. The detection lab runs once a day, as a
+ * CronJob in the cluster (synthetic events) and on an isolated VM (a real run); both write to the SIEM,
+ * whose run documents the Cluster API serves read-only. Drawn below the routes, without traffic.
+ */
+export interface FeedBox {
+  id: string;
+  label: string;
+  sub: string;
+  role: Exclude<Role, "path" | "site">;
+}
+
+export const FEED: Record<"runner" | "vm" | "siem", FeedBox> = {
+  runner: { id: "lab-runner", label: "Lab runner", sub: "daily CronJob", role: "lab" },
+  vm: { id: "lab-vm", label: "Lab VM", sub: "a real run, daily", role: "lab" },
+  siem: { id: "siem", label: "SIEM + lab validator", sub: "findings → run document", role: "project" },
+};
+
+/** The feed's edges' words: into the SIEM, and the run document up to the API. */
+export const FEED_EDGES = { runner: "synthetic events", vm: "Sysmon events", api: "lab runs, read-only" } as const;
+
 export const ZONES = {
   internet: { title: "INTERNET", sub: "" },
   k3s: { title: "K3S01", sub: "one VM · Cilium · Argo CD from git", subNarrow: "one VM · Cilium" },
+  siem: { title: "SIEM01", sub: "own VM · append-only" },
+  lab: { title: "LAB VM", sub: "own VM · egress to the SIEM only", subNarrow: "own VM · isolated" },
 } as const;
 
 export const TITLE = "How a request reaches this site";
@@ -57,6 +80,8 @@ export function describe(): string {
   return (
     "A visitor reaches the Cloudflare edge over HTTPS; a Cloudflare Tunnel carries the request to two cloudflared " +
     "replicas inside the k3s01 VM, which opens no inbound port; the Cilium Gateway routes it by path: " +
-    `${dests.join(", ")}. Every box but this site's is a link to its page.`
+    `${dests.join(", ")}. Every box but this site's is a link to its page. Off the request path, the detection lab ` +
+    "runs once a day: a CronJob in the cluster sends synthetic events and an isolated VM a real run's Sysmon events " +
+    "to the SIEM on its own VM, whose validator writes the run document the Cluster API serves to /lab/, read-only."
   );
 }

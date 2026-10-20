@@ -30,12 +30,16 @@ flowchart LR
     GW -- "/lab/" --> LAB["Detection lab<br/>the detection-lab image"]
     GW -- "/cluster/ and every other path" --> HELLO["ns hello<br/>the cluster page"]
     GW -- "/cluster/api" --> API["ns portfolio-api"]
+    RUNNER["Lab runner<br/>daily CronJob, ns lab"] -- "synthetic events" --> SIEM[("SIEM + lab validator<br/>siem01, its own VM")]
+    VM["Lab VM<br/>its own VM, a real run, daily"] -- "Sysmon events" --> SIEM
+    SIEM -. "lab runs, read-only" .-> API
     classDef here fill:#e7f5ec,stroke:#2f855a;
     classDef other fill:#fdf0e6,stroke:#c05621;
     classDef lab fill:#f1e9fd,stroke:#7c3aed;
     class SITE,HOME here;
     class HELLO,API other;
-    class LAB lab;
+    class LAB,RUNNER,VM lab;
+    class SIEM other;
 ```
 
 Green is this repository; orange is [self-defending-portfolio](https://github.com/HubertMJ/self-defending-portfolio),
@@ -44,7 +48,10 @@ which also holds the cluster manifests that run this image (`cluster/infra/site/
 own image. The landing page draws the same path in its "The way in" section, from
 `src/diagram/model.ts` at build time
 (`scripts/build.mjs`): a dot runs each route in turn (not with reduced motion), and every box but
-the page you are on opens its page. A unit test holds this diagram to the model's routes.
+the page you are on opens its page. Below the routes, off the request path, it draws where the
+`/lab/` page's daily run comes from: the lab runner CronJob and the isolated lab VM write to the SIEM,
+whose run documents the Cluster API serves read-only. A unit test holds this diagram to the model's
+routes and to that feed.
 
 ## From commit to running pod
 

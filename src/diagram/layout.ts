@@ -3,7 +3,7 @@
 // scripts/build.mjs, so the page carries the drawing before any script runs and builds no DOM for it.
 // Colours, fonts and the animation's switch live in styles.css: classes only here.
 
-import { DESTINATIONS, HOPS, TITLE, ZONES, describe, type Destination, type Hop } from "./model";
+import { DESTINATIONS, FEED, FEED_EDGES, HOPS, TITLE, ZONES, describe, type Destination, type FeedBox, type Hop } from "./model";
 
 type Pt = [number, number];
 interface Box {
@@ -16,7 +16,7 @@ interface Edge {
   pts: Pt[];
   label: string;
   at: Pt;
-  anchor: "start" | "middle";
+  anchor: "start" | "middle" | "end";
   tunnel?: boolean;
 }
 export interface Drawing {
@@ -28,6 +28,8 @@ export interface Drawing {
   edges: Edge[];
   /** Per destination, the edge from the Gateway to it. */
   fan: Map<string, Edge>;
+  /** The lab's feed (model.ts FEED): off the request path, so no traffic runs it. */
+  feed: Edge[];
 }
 
 const cx = (b: Box) => b.x + b.w / 2;
@@ -63,17 +65,38 @@ export function wide(): Drawing {
     fan.set(d.id, { pts: [[gw.x + gw.w, cy(gw)], [trunk, cy(gw)], [trunk, cy(b)], [x1, cy(b)]], label: d.route, at: [(trunk + x1) / 2, cy(b) - 8], anchor: "middle" });
   }
   const zoneH = destBottom + 18 - 10;
+  // The feed: the runner under the Gateway, beside the fan's trunk; a band below for the lab VM and the
+  // SIEM, the SIEM under the Cluster API it answers.
+  const api = boxes.get("api") as Box;
+  const runner: Box = { x: gw.x, y: api.y, w: 150, h };
+  const bandY = 10 + zoneH + 20;
+  const siem: Box = { x: api.x, y: bandY + 38, w: api.w, h };
+  const vm: Box = { x: 26, y: siem.y, w: 200, h };
+  boxes.set(FEED.runner.id, runner);
+  boxes.set(FEED.siem.id, siem);
+  boxes.set(FEED.vm.id, vm);
+  const into = cy(siem) - 18;
+  const feed: Edge[] = [
+    { pts: [[cx(runner), runner.y + h], [cx(runner), into], [siem.x - GAP, into]], label: FEED_EDGES.runner, at: [cx(runner) + 8, bandY - 5], anchor: "start" },
+    { pts: [[vm.x + vm.w, cy(vm)], [siem.x - GAP, cy(siem)]], label: FEED_EDGES.vm, at: [(vm.x + vm.w + siem.x) / 2, cy(siem) - 8], anchor: "middle" },
+    // Right of the SIEM zone's title, its words to the left.
+    { pts: [[siem.x + siem.w - 30, siem.y], [siem.x + siem.w - 30, api.y + h + GAP]], label: FEED_EDGES.api, at: [siem.x + siem.w - 38, bandY - 5], anchor: "end" },
+  ];
+  const bandH = siem.y + h + 16 - bandY;
   return {
     view: "wide",
     width: 1180,
-    height: zoneH + 20,
+    height: bandY + bandH + 10,
     zones: [
       { box: { x: 10, y: 10, w: 382, h: zoneH }, title: ZONES.internet.title, sub: ZONES.internet.sub },
       { box: { x: 440, y: 10, w: 730, h: zoneH }, title: ZONES.k3s.title, sub: ZONES.k3s.sub },
+      { box: { x: 10, y: bandY, w: 382, h: bandH }, title: ZONES.lab.title, sub: ZONES.lab.sub },
+      { box: { x: siem.x - 16, y: bandY, w: 1170 - siem.x + 16, h: bandH }, title: ZONES.siem.title, sub: ZONES.siem.sub },
     ],
     boxes,
     edges,
     fan,
+    feed,
   };
 }
 
@@ -97,8 +120,18 @@ export function narrow(): Drawing {
   place("cloudflared", gap);
   place("gateway", 32);
   for (const d of DESTINATIONS) place(d.id, 22);
-  y -= 22;
+  // The feed, under the routes: the runner in the cluster, then the SIEM and the lab VM in zones of their own.
+  y += 14;
+  place(FEED.runner.id, 0);
   k3s.h = y + 16 - k3s.y;
+  const siemZone: Box = { x: 8, y: k3s.y + k3s.h + 40, w: 344, h: 0 };
+  y = siemZone.y + 32;
+  place(FEED.siem.id, 0);
+  siemZone.h = y + 16 - siemZone.y;
+  const labZone: Box = { x: 8, y: siemZone.y + siemZone.h + 40, w: 344, h: 0 };
+  y = labZone.y + 32;
+  place(FEED.vm.id, 0);
+  labZone.h = y + 16 - labZone.y;
   const edges: Edge[] = [];
   for (let i = 1; i < HOPS.length; i++) {
     const a = boxes.get(HOPS[i - 1].id) as Box;
@@ -115,17 +148,31 @@ export function narrow(): Drawing {
     const x1 = b.x - GAP;
     fan.set(d.id, { pts: [[gw.x, cy(gw)], [trunk, cy(gw)], [trunk, cy(b)], [x1, cy(b)]], label: d.route, at: [(trunk + x1) / 2, cy(b) - 6], anchor: "middle" });
   }
+  const runner = boxes.get(FEED.runner.id) as Box;
+  const siem = boxes.get(FEED.siem.id) as Box;
+  const vm = boxes.get(FEED.vm.id) as Box;
+  const api = boxes.get("api") as Box;
+  const right = siem.x + siem.w + 10;
+  const feed: Edge[] = [
+    { pts: [[cx(runner), runner.y + h], [cx(runner), siem.y - GAP]], label: FEED_EDGES.runner, at: [cx(runner) + 8, (runner.y + h + siem.y) / 2 + 4], anchor: "start" },
+    { pts: [[cx(vm), vm.y], [cx(vm), siem.y + h + GAP]], label: FEED_EDGES.vm, at: [cx(vm) + 8, (siem.y + h + vm.y) / 2 + 4], anchor: "start" },
+    // Up the right margin, too narrow for its words.
+    { pts: [[siem.x + siem.w, cy(siem)], [right, cy(siem)], [right, cy(api)], [api.x + api.w + GAP, cy(api)]], label: "", at: [right, cy(api)], anchor: "start" },
+  ];
   return {
     view: "narrow",
     width: 360,
-    height: k3s.y + k3s.h + 8,
+    height: labZone.y + labZone.h + 8,
     zones: [
       { box: internet, title: ZONES.internet.title, sub: ZONES.internet.sub },
       { box: k3s, title: ZONES.k3s.title, sub: ZONES.k3s.subNarrow },
+      { box: siemZone, title: ZONES.siem.title, sub: ZONES.siem.sub },
+      { box: labZone, title: ZONES.lab.title, sub: ZONES.lab.subNarrow },
     ],
     boxes,
     edges,
     fan,
+    feed,
   };
 }
 
@@ -148,7 +195,7 @@ const pathD = (pts: Pt[]) => pts.map(([x, y], i) => `${i ? "L" : "M"}${r1(x)} ${
 function edgeMarkup(e: Edge, marker: string): string {
   return (
     el("path", { class: e.tunnel ? "em-edge em-edge--tunnel" : "em-edge", d: pathD(e.pts), "marker-end": `url(#${marker})` }) +
-    text("em-edge-label", e.at[0], e.at[1], e.label, { "text-anchor": e.anchor })
+    (e.label ? text("em-edge-label", e.at[0], e.at[1], e.label, { "text-anchor": e.anchor }) : "")
   );
 }
 
@@ -163,6 +210,10 @@ function boxMarkup(b: Box, label: string, sub: string | undefined, extra: string
 
 function hopMarkup(n: Hop, b: Box): string {
   return el("g", { class: "em-node em-path", "data-node": n.id }, boxMarkup(b, n.label, n.sub, ""));
+}
+
+function feedMarkup(f: FeedBox, b: Box): string {
+  return el("g", { class: `em-node em-${f.role}`, "data-node": f.id }, boxMarkup(b, f.label, f.sub, ""));
 }
 
 function destMarkup(d: Destination, b: Box): string {
@@ -183,9 +234,13 @@ export function svg(dr: Drawing): string {
   const zones = dr.zones.map((z) =>
     el("g", { class: "em-zone" }, el("rect", { x: z.box.x, y: z.box.y, width: z.box.w, height: z.box.h, rx: 9 }), el("text", { class: "em-zone-title", x: z.box.x + 12, y: z.box.y + 20 }, esc(z.title), el("tspan", { class: "em-zone-sub" }, esc(` ${z.sub}`)))),
   );
-  const edges = [...dr.edges, ...dr.fan.values()].map((e) => edgeMarkup(e, marker));
+  const edges = [...dr.edges, ...dr.fan.values(), ...dr.feed].map((e) => edgeMarkup(e, marker));
   const dots = DESTINATIONS.map((d) => el("circle", { class: `em-dot em-dot--${d.role}`, id: `${p}-dot-${d.id}`, r: 4 }));
-  const nodes = [...HOPS.map((n) => hopMarkup(n, dr.boxes.get(n.id) as Box)), ...DESTINATIONS.map((d) => destMarkup(d, dr.boxes.get(d.id) as Box))];
+  const nodes = [
+    ...HOPS.map((n) => hopMarkup(n, dr.boxes.get(n.id) as Box)),
+    ...DESTINATIONS.map((d) => destMarkup(d, dr.boxes.get(d.id) as Box)),
+    ...Object.values(FEED).map((f) => feedMarkup(f, dr.boxes.get(f.id) as Box)),
+  ];
   return el(
     "svg",
     { class: `entry-map entry-map--${dr.view}`, viewBox: `0 0 ${dr.width} ${dr.height}`, role: "group", "aria-labelledby": `${p}-title ${p}-desc` },

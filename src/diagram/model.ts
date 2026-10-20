@@ -14,6 +14,8 @@ export interface Hop {
   /** Drawn dashed: the tunnel is dialled out from inside, not a port open to the internet. */
   tunnel?: boolean;
   zone: "internet" | "k3s";
+  /** One sentence for ASCII mode's popup beside the box (data-tip). */
+  tip: string;
 }
 
 export interface Destination {
@@ -26,22 +28,24 @@ export interface Destination {
   route: string;
   /** Where a click goes; none for the page the visitor is on. */
   href?: string;
+  /** One sentence for ASCII mode's popup beside the box (data-tip). */
+  tip: string;
 }
 
 /** Visitor to Gateway, in order. */
 export const HOPS: Hop[] = [
-  { id: "visitor", label: "Visitor", zone: "internet" },
-  { id: "edge", label: "Cloudflare edge", sub: "TLS · WAF", via: "HTTPS", zone: "internet" },
-  { id: "cloudflared", label: "cloudflared ×2", sub: "no inbound port", via: "tunnel", tunnel: true, zone: "k3s" },
-  { id: "gateway", label: "Cilium Gateway", sub: "routes by path", via: "HTTPS", zone: "k3s" },
+  { id: "visitor", label: "Visitor", zone: "internet", tip: "You: every page here comes in the same way, over HTTPS to Cloudflare." },
+  { id: "edge", label: "Cloudflare edge", sub: "TLS · WAF", via: "HTTPS", zone: "internet", tip: "Cloudflare terminates TLS and filters with its WAF; nothing reaches the cluster another way." },
+  { id: "cloudflared", label: "cloudflared ×2", sub: "no inbound port", via: "tunnel", tunnel: true, zone: "k3s", tip: "The tunnel is dialled from inside the VM: nothing there listens for the internet." },
+  { id: "gateway", label: "Cilium Gateway", sub: "routes by path", via: "HTTPS", zone: "k3s", tip: "Cilium's Gateway sends each path to the project that owns it." },
 ];
 
 /** Where the Gateway sends each path, top to bottom. */
 export const DESTINATIONS: Destination[] = [
-  { id: "home", label: "This site", repo: "hubertjablon.ski", role: "site", route: "/" },
-  { id: "lab", label: "Detection lab", repo: "detection-lab", role: "lab", route: "/lab/", href: "/lab/" },
-  { id: "cluster", label: "Self-defending cluster", repo: "self-defending-portfolio", role: "project", route: "/cluster/", href: "/cluster/" },
-  { id: "api", label: "Cluster API", repo: "self-defending-portfolio", role: "project", route: "/cluster/api", href: "/cluster/#verify" },
+  { id: "home", label: "This site", repo: "hubertjablon.ski", role: "site", route: "/", tip: "This page: its own repository, its own signed image and CI." },
+  { id: "lab", label: "Detection lab", repo: "detection-lab", role: "lab", route: "/lab/", href: "/lab/", tip: "Four renamed copies of one program on an isolated VM: which rules still catch them?" },
+  { id: "cluster", label: "Self-defending cluster", repo: "self-defending-portfolio", role: "project", route: "/cluster/", href: "/cluster/", tip: "A hardened k3s cluster you can attack from your browser, and watch it answer." },
+  { id: "api", label: "Cluster API", repo: "self-defending-portfolio", role: "project", route: "/cluster/api", href: "/cluster/#verify", tip: "The cluster's API: live posture, attack runs and the provenance of its images." },
 ];
 
 export const ZONES = {

@@ -34,9 +34,11 @@ describe("the way in (landing page diagram)", () => {
       const s = svg(dr);
       expect(s).not.toMatch(/ style=|<style|<script|href="#/);
       for (const d of DESTINATIONS) {
-        if (d.href) expect(s).toContain(`<a class="em-link" href="${d.href}" data-node="${d.id}">`);
+        if (d.href) expect(s).toContain(`<a class="em-link" href="${d.href}" data-node="${d.id}" data-tip="`);
         else expect(s).toContain(`data-node="${d.id}" aria-current="page"`);
       }
+      // Every box carries its sentence for ASCII mode's popup.
+      expect(s.match(/data-node="/g)?.length).toBe(s.match(/data-tip="[^"]+"/g)?.length);
     }
     expect(DESTINATIONS.find((d) => d.route === "/")?.href).toBeUndefined();
     expect(DESTINATIONS.find((d) => d.route === "/lab/")?.href).toBe("/lab/");

@@ -162,7 +162,7 @@ function boxMarkup(b: Box, label: string, sub: string | undefined, extra: string
 }
 
 function hopMarkup(n: Hop, b: Box): string {
-  return el("g", { class: "em-node em-path", "data-node": n.id }, boxMarkup(b, n.label, n.sub, ""));
+  return el("g", { class: "em-node em-path", "data-node": n.id, "data-tip": n.tip }, boxMarkup(b, n.label, n.sub, ""));
 }
 
 function destMarkup(d: Destination, b: Box): string {
@@ -170,10 +170,10 @@ function destMarkup(d: Destination, b: Box): string {
   if (!d.href) {
     // The page the visitor is on: no link (it would only reload or jump), a dot that says "here".
     const here = el("circle", { class: "em-here", cx: right - 15, cy: cy(b), r: 3.5 });
-    return el("g", { class: `em-node em-${d.role}`, "data-node": d.id, "aria-current": "page" }, el("title", {}, esc(`${d.label}: you are here`)), boxMarkup(b, d.label, d.repo, here, true));
+    return el("g", { class: `em-node em-${d.role}`, "data-node": d.id, "aria-current": "page", "data-tip": d.tip }, el("title", {}, esc(`${d.label}: you are here`)), boxMarkup(b, d.label, d.repo, here, true));
   }
   const go = el("path", { class: "em-go", d: `M${r1(right - 17)} ${r1(cy(b) - 5)} l5 5 l-5 5`, "aria-hidden": "true" });
-  return el("a", { class: "em-link", href: d.href, "data-node": d.id }, el("g", { class: `em-node em-${d.role}` }, boxMarkup(b, d.label, d.repo, go, true)));
+  return el("a", { class: "em-link", href: d.href, "data-node": d.id, "data-tip": d.tip }, el("g", { class: `em-node em-${d.role}` }, boxMarkup(b, d.label, d.repo, go, true)));
 }
 
 /** One drawing as an inline <svg>. */

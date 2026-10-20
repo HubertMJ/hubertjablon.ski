@@ -273,6 +273,21 @@ test("ASCII mode: a link turns it on, the diagram is drawn in characters, typing
   // Sized once its font is in (a frame later at most).
   await expect.poll(() => dg.evaluate((el) => el.scrollWidth <= (el.parentElement as HTMLElement).clientWidth + 1)).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  // With a pointer that hovers, a box's short words pop up beside it.
+  if (test.info().project.name === "desktop") {
+    await dg.evaluate((pre) => pre.scrollIntoView({ block: "center", behavior: "instant" }));
+    const at = await dg.evaluate((pre) => {
+      const lines = (pre.textContent ?? "").split("\n");
+      const r = lines.findIndex((l) => l.includes("Cloudflare edge"));
+      const c = lines[r].indexOf("Cloudflare edge") + 3;
+      const rect = pre.getBoundingClientRect();
+      return { x: rect.left + ((c + 0.5) / [...lines[0]].length) * rect.width, y: rect.top + ((r + 0.5) / (lines.length - 1)) * rect.height };
+    });
+    await page.mouse.move(at.x, at.y);
+    await expect(page.locator(".ascii-tip:not([hidden])")).toContainText("Cloudflare terminates TLS");
+    await page.mouse.move(1, 1);
+    await expect(page.locator(".ascii-tip:not([hidden])")).toHaveCount(0);
+  }
   await page.keyboard.type("ascii");
   await expect(page.locator("html")).not.toHaveClass(/ascii/);
   await expect(page.locator("pre.ascii-dg, .ascii-bg, .ascii-banner")).toHaveCount(0);

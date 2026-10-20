@@ -203,11 +203,11 @@ export function svg(dr: Drawing): string {
 // ---------- traffic ----------
 
 /**
- * Every 4 s a dot runs from the visitor to one of the pages, each page in turn (16 s round). Its
+ * Every 2.7 s a dot runs from the visitor to one of the pages, each page in turn (10.8 s round). Its
  * route (offset-path) and timing (keyframes) per drawing, as CSS: the page's CSP allows no style
  * attribute. styles.css shows and runs the dots only when motion is welcome.
  */
-export const TRAFFIC = { period: 16, every: 4, travel: 3.2, hop: 0.14 } as const;
+export const TRAFFIC = { period: 10.8, every: 2.7, travel: 2.6, hop: 0.14 } as const;
 
 function laneCss(dr: Drawing, d: Destination, i: number): string {
   const p = dr.view === "wide" ? "em" : "emn";

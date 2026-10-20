@@ -293,5 +293,11 @@ test("ASCII mode: a link turns it on, the diagram is drawn in characters, typing
   await expect(page.locator("pre.ascii-dg, .ascii-bg, .ascii-banner")).toHaveCount(0);
   await page.goto("/");
   await expect(page.locator("html")).not.toHaveClass(/ascii/);
+  // On a phone: five taps on the title turn it on, five on the banner (which hides the title here) turn it off.
+  for (let i = 0; i < 5; i++) await page.locator("main h1").click();
+  await expect(page.locator("html")).toHaveClass(/ascii/);
+  await expect(page.locator("main h1")).toHaveClass(/ascii-said/);
+  for (let i = 0; i < 5; i++) await page.locator(".ascii-banner").click();
+  await expect(page.locator("html")).not.toHaveClass(/ascii/);
   expect(errors).toEqual([]);
 });

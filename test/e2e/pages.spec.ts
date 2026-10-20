@@ -253,3 +253,30 @@ test.describe("the way in", () => {
     expect(errors).toEqual([]);
   });
 });
+
+// ASCII mode, the site's hidden terminal look (src/ascii): off by default, on by a link or by typing
+// "ascii", remembered across visits; the entry diagram becomes a character drawing that fits the page.
+test("ASCII mode: a link turns it on, the diagram is drawn in characters, typing ascii turns it off and it is remembered", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("response", (r) => { if (r.status() >= 400 && !/\/(cluster|lab)\//.test(r.url())) errors.push(`${r.status()} ${r.url()}`); });
+  await page.goto("/");
+  await expect(page.locator("html")).not.toHaveClass(/ascii/);
+  await expect(page.locator("pre.ascii-dg")).toHaveCount(0);
+  await page.goto("/?ascii=1");
+  await expect(page.locator("html")).toHaveClass(/ascii/);
+  const dg = page.locator("pre.ascii-dg:not([hidden])");
+  await expect(dg).toHaveCount(1);
+  await expect(dg).toContainText("Cloudflare edge");
+  await expect(dg).toContainText("Detection lab");
+  await expect(page.locator(".ascii-banner")).toBeVisible();
+  // Sized once its font is in (a frame later at most).
+  await expect.poll(() => dg.evaluate((el) => el.scrollWidth <= (el.parentElement as HTMLElement).clientWidth + 1)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.keyboard.type("ascii");
+  await expect(page.locator("html")).not.toHaveClass(/ascii/);
+  await expect(page.locator("pre.ascii-dg, .ascii-bg, .ascii-banner")).toHaveCount(0);
+  await page.goto("/");
+  await expect(page.locator("html")).not.toHaveClass(/ascii/);
+  expect(errors).toEqual([]);
+});

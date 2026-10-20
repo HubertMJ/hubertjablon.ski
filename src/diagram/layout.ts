@@ -18,6 +18,8 @@ interface Edge {
   at: Pt;
   anchor: "start" | "middle" | "end";
   tunnel?: boolean;
+  /** Drawn dotted: the lab's feed, off the request path. */
+  feed?: boolean;
 }
 export interface Drawing {
   view: "wide" | "narrow";
@@ -77,10 +79,10 @@ export function wide(): Drawing {
   boxes.set(FEED.vm.id, vm);
   const into = cy(siem) - 18;
   const feed: Edge[] = [
-    { pts: [[cx(runner), runner.y + h], [cx(runner), into], [siem.x - GAP, into]], label: FEED_EDGES.runner, at: [cx(runner) + 8, bandY - 5], anchor: "start" },
-    { pts: [[vm.x + vm.w, cy(vm)], [siem.x - GAP, cy(siem)]], label: FEED_EDGES.vm, at: [(vm.x + vm.w + siem.x) / 2, cy(siem) - 8], anchor: "middle" },
+    { pts: [[cx(runner), runner.y + h], [cx(runner), into], [siem.x - GAP, into]], label: FEED_EDGES.runner, at: [cx(runner) + 8, bandY - 5], anchor: "start", feed: true },
+    { pts: [[vm.x + vm.w, cy(vm)], [siem.x - GAP, cy(siem)]], label: FEED_EDGES.vm, at: [(vm.x + vm.w + siem.x) / 2, cy(siem) - 8], anchor: "middle", feed: true },
     // Right of the SIEM zone's title, its words to the left.
-    { pts: [[siem.x + siem.w - 30, siem.y], [siem.x + siem.w - 30, api.y + h + GAP]], label: FEED_EDGES.api, at: [siem.x + siem.w - 38, bandY - 5], anchor: "end" },
+    { pts: [[siem.x + siem.w - 30, siem.y], [siem.x + siem.w - 30, api.y + h + GAP]], label: FEED_EDGES.api, at: [siem.x + siem.w - 38, bandY - 5], anchor: "end", feed: true },
   ];
   const bandH = siem.y + h + 16 - bandY;
   return {
@@ -154,10 +156,10 @@ export function narrow(): Drawing {
   const api = boxes.get("api") as Box;
   const right = siem.x + siem.w + 10;
   const feed: Edge[] = [
-    { pts: [[cx(runner), runner.y + h], [cx(runner), siem.y - GAP]], label: FEED_EDGES.runner, at: [cx(runner) + 8, (runner.y + h + siem.y) / 2 + 4], anchor: "start" },
-    { pts: [[cx(vm), vm.y], [cx(vm), siem.y + h + GAP]], label: FEED_EDGES.vm, at: [cx(vm) + 8, (siem.y + h + vm.y) / 2 + 4], anchor: "start" },
+    { pts: [[cx(runner), runner.y + h], [cx(runner), siem.y - GAP]], label: FEED_EDGES.runner, at: [cx(runner) + 8, (runner.y + h + siem.y) / 2 + 4], anchor: "start", feed: true },
+    { pts: [[cx(vm), vm.y], [cx(vm), siem.y + h + GAP]], label: FEED_EDGES.vm, at: [cx(vm) + 8, (siem.y + h + vm.y) / 2 + 4], anchor: "start", feed: true },
     // Up the right margin, too narrow for its words.
-    { pts: [[siem.x + siem.w, cy(siem)], [right, cy(siem)], [right, cy(api)], [api.x + api.w + GAP, cy(api)]], label: "", at: [right, cy(api)], anchor: "start" },
+    { pts: [[siem.x + siem.w, cy(siem)], [right, cy(siem)], [right, cy(api)], [api.x + api.w + GAP, cy(api)]], label: "", at: [right, cy(api)], anchor: "start", feed: true },
   ];
   return {
     view: "narrow",
@@ -194,7 +196,7 @@ const pathD = (pts: Pt[]) => pts.map(([x, y], i) => `${i ? "L" : "M"}${r1(x)} ${
 
 function edgeMarkup(e: Edge, marker: string): string {
   return (
-    el("path", { class: e.tunnel ? "em-edge em-edge--tunnel" : "em-edge", d: pathD(e.pts), "marker-end": `url(#${marker})` }) +
+    el("path", { class: e.tunnel ? "em-edge em-edge--tunnel" : e.feed ? "em-edge em-edge--feed" : "em-edge", d: pathD(e.pts), "marker-end": `url(#${marker})` }) +
     (e.label ? text("em-edge-label", e.at[0], e.at[1], e.label, { "text-anchor": e.anchor }) : "")
   );
 }

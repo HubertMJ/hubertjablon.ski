@@ -30,8 +30,8 @@ flowchart LR
     GW -- "/lab/" --> LAB["Detection lab<br/>the detection-lab image"]
     GW -- "/cluster/ and every other path" --> HELLO["ns hello<br/>the cluster page"]
     GW -- "/cluster/api" --> API["ns portfolio-api"]
-    RUNNER["Lab runner<br/>daily CronJob, ns lab"] -- "synthetic events" --> SIEM[("SIEM + lab validator<br/>siem01, its own VM")]
-    VM["Lab VM<br/>its own VM, a real run, daily"] -- "Sysmon events" --> SIEM
+    RUNNER["Lab runner<br/>daily CronJob, ns lab"] -. "synthetic events" .-> SIEM[("SIEM + lab validator<br/>siem01, its own VM")]
+    VM["Lab VM<br/>its own VM, a real run, daily"] -. "Sysmon events" .-> SIEM
     SIEM -. "lab runs, read-only" .-> API
     classDef here fill:#e7f5ec,stroke:#2f855a;
     classDef other fill:#fdf0e6,stroke:#c05621;

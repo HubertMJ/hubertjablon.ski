@@ -49,6 +49,8 @@ describe("the way in (landing page diagram)", () => {
       const s = svg(dr);
       for (const f of Object.values(FEED)) expect(s).toContain(`class="em-node em-${f.role}" data-node="${f.id}"`);
       expect(dr.feed).toHaveLength(3);
+      expect(dr.feed.every((e) => e.feed)).toBe(true);
+      expect((s.match(/class="em-edge em-edge--feed"/g) ?? []).length).toBe(3);
       // The feed's last edge ends at the Cluster API's box.
       const api = dr.boxes.get("api");
       const end = dr.feed[2].pts.at(-1);

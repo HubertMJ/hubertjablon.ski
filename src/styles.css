@@ -1194,6 +1194,11 @@ html[data-folded~="projects"] #projects
   stroke-dasharray: 5 4;
 }
 
+/* The lab's feed: off the request path. */
+.em-edge--feed {
+  stroke-dasharray: 2 4;
+}
+
 /* A box that opens a page carries an arrow; the page the visitor is on, a dot instead. */
 .em-go {
   fill: none;

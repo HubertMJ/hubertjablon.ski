@@ -46,7 +46,7 @@ await mkdir(join(out, "site-assets"), { recursive: true });
 
 const result = await esbuild.build({
   absWorkingDir: root,
-  entryPoints: ["src/landing.ts", "src/work.ts", "src/theme.ts", "src/styles.css"],
+  entryPoints: ["src/landing.ts", "src/work.ts", "src/vllm-demo.ts", "src/theme.ts", "src/styles.css"],
   outdir: join(out, "site-assets"),
   entryNames: "[name]-[hash]",
   bundle: true,

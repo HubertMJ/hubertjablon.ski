@@ -11,6 +11,8 @@
 @import "entry-traffic.css";
 /* ASCII mode, the hidden terminal look (src/ascii): inert unless html.ascii is set. */
 @import "./ascii/ascii.css";
+/* /work/vllm/: the interactive demo, scoped under .vdemo. */
+@import "./work/vllm-demo/demo.css";
 
 :root {
   color-scheme: dark;

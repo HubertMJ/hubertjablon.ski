@@ -44,7 +44,7 @@
     <div class="wrap">
       <p class="eyebrow">Cyber security engineer · Rzeszów, Poland</p>
       <h1 id="hero-title">Hubert Jabłoński</h1>
-      <p class="hero__lead">I build systems that <strong>defend themselves</strong> and detection that <strong>still holds when the attacker changes things</strong>. Two of them are below, both running live.</p>
+      <p class="hero__lead">I build systems that <strong>defend themselves</strong> and detection that <strong>still holds when the attacker changes things</strong>. Two of them are below, both running live, next to three I built and run at work.</p>
     </div>
   </section>
 
@@ -53,6 +53,7 @@
       <header class="section__head">
         <p class="eyebrow">Projects</p>
         <h2 id="projects-title">What I have built</h2>
+        <p class="section__lead">The last three are systems I built and run at work. Their code isn't public, so their pages are mock-ups and descriptions written for this site.</p>
       </header>
       <ul class="cards" role="list">
         <li class="card card--live">
@@ -68,6 +69,27 @@
           <p class="card__lead">An incident generator writes ATT&amp;CK scenarios as the Windows events they would leave. The first one: four copies of one program, each with a new hash and a new name. Which rules still catch them, and do they add up to one incident?</p>
           <p class="card__tags">Sigma · OpenSearch Alerting · Sysmon · MITRE ATT&amp;CK</p>
           <p class="card__actions"><a class="btn btn--ghost" href="/lab/">Open the lab</a></p>
+        </li>
+        <li class="card card--work">
+          <p class="card__status">Mock-up</p>
+          <h3 class="card__title"><a href="/work/vllm/">Multi-GPU LLM deployment manager</a></h3>
+          <p class="card__lead">Several vLLM engines on one four-GPU host behind one OpenAI-compatible endpoint: memory admitted from measured profiles, models booked in advance, cold starts the client never sees. Here as a clickable mock-up on made-up data.</p>
+          <p class="card__tags">vLLM · Docker · FastAPI · React</p>
+          <p class="card__actions"><a class="btn btn--ghost" href="/work/vllm/">Open the mock-up</a></p>
+        </li>
+        <li class="card card--work">
+          <p class="card__status">How it works</p>
+          <h3 class="card__title"><a href="/work/bridge/">Git forge ⇄ AI agent bridge</a></h3>
+          <p class="card__lead">Mention an AI agent in an issue or a pull request and the answer comes back in the same thread. A queue, isolated runs, usage limits, checkpoints and review passes keep it unattended and in bounds.</p>
+          <p class="card__tags">Webhooks · Claude Code · Python · SSE</p>
+          <p class="card__actions"><a class="btn btn--ghost" href="/work/bridge/">How it works</a></p>
+        </li>
+        <li class="card card--work">
+          <p class="card__status">Tool</p>
+          <h3 class="card__title"><a href="/work/flota/">Flota</a></h3>
+          <p class="card__lead">A fleet of AI coding sessions for one project: a manager that can only delegate, sections in their own terminals, and a guard that holds the account's usage limits without spending a token. Built and used on a real project, then rewritten from scratch as a general tool; the source goes public once it has been tested on more projects.</p>
+          <p class="card__tags">Bash · tmux · Claude Code · Python</p>
+          <p class="card__actions"><a class="btn btn--ghost" href="/work/flota/">How it works</a></p>
         </li>
       </ul>
     </div>

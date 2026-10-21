@@ -18,6 +18,10 @@ The detection lab page lives in its own repository, [detection-lab](https://gith
 with its own deployed image; the Gateway serves `/lab/` from it. The landing page keeps the Detection
 lab card and diagram node, which link to `/lab/`.
 
+The `/work/` pages (the vLLM deployment manager mock-up, the git forge bridge and Flota) live in their
+own repository too, work-mockups, with their own image; the Gateway is to serve `/work/` from it. The
+landing page carries their three project cards, which link under `/work/`.
+
 ## How a request reaches it
 
 ```mermaid

@@ -9,7 +9,9 @@ import { expect, test } from "@playwright/test";
 test.describe("landing page", () => {
   test("the landing page lists both projects and sends the old single page's links on to /cluster/", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator(".card")).toHaveCount(2);
+    await expect(page.locator("#projects .card")).toHaveCount(2);
+    // What I build at work: three cards, each opening its page under /work/.
+    for (const p of ["vllm", "bridge", "flota"]) await expect(page.locator(`#work .card__title a[href="/work/${p}/"]`)).toHaveCount(1);
     // Both projects are live now, so match each card by its link, not its status class.
     await expect(page.locator('.card--live .card__title a[href="/cluster/"]')).toHaveCount(1);
     await expect(page.locator('.card--live .card__title a[href="/lab/"]')).toHaveCount(1);
@@ -300,4 +302,24 @@ test("ASCII mode: a link turns it on, the diagram is drawn in characters, typing
   for (let i = 0; i < 5; i++) await page.locator(".ascii-banner").click();
   await expect(page.locator("html")).not.toHaveClass(/ascii/);
   expect(errors).toEqual([]);
+});
+
+// The /work/ pages: each loads, carries its own words, fits the screen, and every screenshot is a local
+// image with its size given (so nothing jumps as it loads).
+test("the /work/ pages load, fit the screen and show their screenshots", async ({ page }) => {
+  for (const [path, words] of [["/work/vllm/", "deployment manager"], ["/work/bridge/", "From a mention to a pull request"], ["/work/flota/", "One screen for the whole fleet"]]) {
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    await page.goto(path);
+    await expect(page.locator("main")).toContainText(words);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    for (const img of await page.locator("main img").all()) {
+      expect(await img.getAttribute("src")).toMatch(/^\/work\//);
+      expect(Number(await img.getAttribute("width"))).toBeGreaterThan(0);
+      expect(Number(await img.getAttribute("height"))).toBeGreaterThan(0);
+    }
+    expect(errors).toEqual([]);
+  }
+  await page.goto("/work/vllm/");
+  await expect(page.locator(".shot img")).toHaveCount(14);
 });

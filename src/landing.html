@@ -26,6 +26,7 @@
     <nav class="site-nav" aria-label="Sections">
       <ul>
         <li><a href="#projects">Projects</a></li>
+        <li><a href="#work">At work</a></li>
         <li><a href="#about">About</a></li>
         <li><a href="https://github.com/HubertMJ" rel="noopener noreferrer">GitHub</a></li>
       </ul>
@@ -68,6 +69,39 @@
           <p class="card__lead">An incident generator writes ATT&amp;CK scenarios as the Windows events they would leave. The first one: four copies of one program, each with a new hash and a new name. Which rules still catch them, and do they add up to one incident?</p>
           <p class="card__tags">Sigma · OpenSearch Alerting · Sysmon · MITRE ATT&amp;CK</p>
           <p class="card__actions"><a class="btn btn--ghost" href="/lab/">Open the lab</a></p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section landing-projects" id="work" aria-labelledby="work-title" data-group="landing">
+    <div class="wrap">
+      <header class="section__head">
+        <p class="eyebrow">At work</p>
+        <h2 id="work-title">What I build for my team</h2>
+        <p class="section__lead">Built at work, so the code stays private. These pages show what each one does: the real interface on made-up data, or how it works.</p>
+      </header>
+      <ul class="cards" role="list">
+        <li class="card card--work">
+          <p class="card__status">Mock-up</p>
+          <h3 class="card__title"><a href="/work/vllm/">Multi-GPU LLM deployment manager</a></h3>
+          <p class="card__lead">Several vLLM engines on one four-GPU host behind one OpenAI-compatible endpoint. Memory is admitted from measured profiles, external jobs book models in advance, and a cold start stays invisible to the client.</p>
+          <p class="card__tags">vLLM · Docker · FastAPI · React</p>
+          <p class="card__actions"><a class="btn btn--ghost" href="/work/vllm/">See the interface</a></p>
+        </li>
+        <li class="card card--work">
+          <p class="card__status">How it works</p>
+          <h3 class="card__title"><a href="/work/bridge/">Git forge ⇄ AI agent bridge</a></h3>
+          <p class="card__lead">Mention the agent in an issue or a pull request and the answer comes back in the same thread. A queue, isolated runs, usage limits, checkpoints and review passes keep it unattended and in bounds.</p>
+          <p class="card__tags">Webhooks · Claude Code · Python · SSE</p>
+          <p class="card__actions"><a class="btn btn--ghost" href="/work/bridge/">How it works</a></p>
+        </li>
+        <li class="card card--work">
+          <p class="card__status">Tool</p>
+          <h3 class="card__title"><a href="/work/flota/">Flota</a></h3>
+          <p class="card__lead">A fleet of AI coding sessions for one project: a manager that can only delegate, sections in their own terminals, and a guard that holds the account's usage limits without spending a token.</p>
+          <p class="card__tags">Bash · tmux · Claude Code · Python</p>
+          <p class="card__actions"><a class="btn btn--ghost" href="/work/flota/">How it works</a></p>
         </li>
       </ul>
     </div>

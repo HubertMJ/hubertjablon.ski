@@ -19,6 +19,10 @@ const out = resolve(root, i > 0 ? process.argv[i + 1] : "dist");
 /** The site's pages. A project with its own repository (the self-defending cluster) is not here. */
 const PAGES = [
   { src: "src/landing.html", out: "index.html" },
+  // What I build at work, shown without its code.
+  { src: "src/work/vllm.html", out: "work/vllm/index.html" },
+  { src: "src/work/bridge.html", out: "work/bridge/index.html" },
+  { src: "src/work/flota.html", out: "work/flota/index.html" },
 ];
 
 /** src/diagram/layout.ts's exports: bundled in memory and imported, so the page and this script share the one model. */
@@ -42,7 +46,7 @@ await mkdir(join(out, "site-assets"), { recursive: true });
 
 const result = await esbuild.build({
   absWorkingDir: root,
-  entryPoints: ["src/landing.ts", "src/theme.ts", "src/styles.css"],
+  entryPoints: ["src/landing.ts", "src/work.ts", "src/theme.ts", "src/styles.css"],
   outdir: join(out, "site-assets"),
   entryNames: "[name]-[hash]",
   bundle: true,

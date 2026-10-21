@@ -1355,3 +1355,34 @@ html.slide-out-backward body > :not(.site-header) {
 /* Diagrams are drawings, not text: a drag, double-click or long-press on a box must not select its
    words or open the text callout. */
 .entry-map { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+
+
+/* ---------- /work/: what I build at work, shown without its code ---------- */
+.card--work { border-top-color: var(--role-record); }
+.work-note {
+  max-width: 62ch;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+.work-list { display: grid; gap: 0.85rem; max-width: 78ch; margin: 0; padding-left: 1.2rem; color: var(--text-muted); }
+.work-list strong { color: var(--text); }
+.shots { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); }
+.shot { margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.shot--wide { grid-column: 1 / -1; }
+.shot__link { display: block; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: #05070a; }
+.shot img { display: block; width: 100%; height: auto; }
+/* A very tall screen shows its top; the link opens the whole of it. */
+.shot--tall img { aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
+.shot figcaption { color: var(--text-muted); font-size: 0.9rem; max-width: 70ch; }
+.pipeline { display: grid; gap: 0.75rem; margin: 0; padding: 0; list-style: none; counter-reset: step;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
+.pipeline li { counter-increment: step; display: flex; flex-direction: column; gap: 0.35rem; padding: 1rem 1.1rem;
+  border: 1px solid var(--border); border-left: 3px solid var(--role-entry); border-radius: var(--radius-sm); background: var(--surface); }
+.pipeline li::before { content: counter(step, decimal-leading-zero); font: 600 0.75rem/1 var(--font-mono); color: var(--text-faint); }
+.pipeline span { color: var(--text-muted); font-size: 0.92rem; }
+.term { margin: 0; padding: 1rem 1.2rem; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: #05070a; color: #c9d4c5; font: 0.82rem/1.5 var(--font-mono); white-space: pre; }

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multi-GPU LLM deployment manager · Hubert Jabłoński</title>
+<meta name="description" content="A self-hosted control plane for several vLLM engines on one multi-GPU host: measured VRAM admission, reservations, and a gateway that hides cold starts. A mock-up of the real interface on made-up data.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/site-assets/{{styles.css}}">
+<script src="/site-assets/{{theme.js}}"></script>
+<script type="module" src="/site-assets/{{work.js}}"></script>
+</head>
+<body data-banner="vLLM manager">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap site-header__inner">
+    <a class="brand" href="/" aria-label="Hubert Jabłoński, home">
+      <span class="brand__mark" aria-hidden="true">&gt;_</span>
+      <span class="brand__name">hubertjablon<span class="brand__dot">.</span>ski</span>
+    </a>
+    <nav class="site-nav" aria-label="Sections">
+      <ul>
+        <li><a href="/#projects">Projects</a></li>
+        <li><a href="/#work">At work</a></li>
+        <li><a href="https://github.com/HubertMJ" rel="noopener noreferrer">GitHub</a></li>
+      </ul>
+    </nav>
+    <div class="site-header__tools">
+      <button type="button" class="theme-toggle" id="theme-toggle" hidden aria-label="Switch theme">
+        <span class="theme-toggle__icon" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main" tabindex="-1" class="landing work-page">
+  <section class="hero landing-hero work-hero" id="top" aria-labelledby="page-title">
+    <div class="wrap">
+      <p class="eyebrow">At work · mock-up</p>
+      <h1 id="page-title">A multi-GPU LLM deployment manager</h1>
+      <p class="hero__lead">A self-hosted control plane that runs several vLLM inference engines on one four-GPU host, each in its own container, behind a single OpenAI-compatible endpoint. An operator registers a model, its GPU and its limits; clients just name it in <code>model</code>, and a stopped one starts on demand.</p>
+      <p class="work-note">The code is not public. Every screenshot below is the real interface, rendered on made-up data: the hosts, models, clients and numbers are invented.</p>
+    </div>
+  </section>
+
+  <section class="section" id="screens" aria-labelledby="screens-title">
+    <div class="wrap">
+      <header class="section__head">
+        <p class="eyebrow">The interface</p>
+        <h2 id="screens-title">What the operator sees</h2>
+      </header>
+      <div class="shots">
+        <figure class="shot shot--wide shot--tall">
+          <a href="/work/vllm/01-deployments.webp" class="shot__link"><img src="/work/vllm/01-deployments.webp" width="2880" height="6014" loading="lazy" decoding="async" alt="Deployments: what runs where, a quick-test playground, the latest requests and every deployment as a card."></a>
+          <figcaption>Deployments: what runs where, a quick-test playground, the latest requests and every deployment as a card.</figcaption>
+        </figure>
+        <figure class="shot shot--wide">
+          <a href="/work/vllm/02-gpu-vram.webp" class="shot__link"><img src="/work/vllm/02-gpu-vram.webp" width="2496" height="1130" loading="lazy" decoding="async" alt="The VRAM budget per card: measured use against a 95% ceiling, what is resident, and a card blocked for a driver update."></a>
+          <figcaption>The VRAM budget per card: measured use against a 95% ceiling, what is resident, and a card blocked for a driver update.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="/work/vllm/03a-card-running.webp" class="shot__link"><img src="/work/vllm/03a-card-running.webp" width="812" height="760" loading="lazy" decoding="async" alt="A running deployment: measured memory floor, context, KV cache and concurrency."></a>
+          <figcaption>A running deployment: measured memory floor, context, KV cache and concurrency.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="/work/vllm/03b-card-starting.webp" class="shot__link"><img src="/work/vllm/03b-card-starting.webp" width="812" height="824" loading="lazy" decoding="async" alt="Starting: admitted on an estimate until the engine reports its real profile."></a>
+          <figcaption>Starting: admitted on an estimate until the engine reports its real profile.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="/work/vllm/03c-card-error.webp" class="shot__link"><img src="/work/vllm/03c-card-error.webp" width="812" height="824" loading="lazy" decoding="async" alt="A failed start keeps its reason in a dismissible error box."></a>
+          <figcaption>A failed start keeps its reason in a dismissible error box.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="/work/vllm/03d-card-stopped.webp" class="shot__link"><img src="/work/vllm/03d-card-stopped.webp" width="812" height="824" loading="lazy" decoding="async" alt="Stopped, and lazy: the first request that names it starts it again."></a>
+          <figcaption>Stopped, and lazy: the first request that names it starts it again.</figcaption>
+        </figure>
+        <figure class="shot shot--tall">
+          <a href="/work/vllm/04b-new-deployment-full.webp" class="shot__link"><img src="/work/vllm/04b-new-deployment-full.webp" width="1344" height="3804" loading="lazy" decoding="async" alt="A new deployment: pick a cached model and see whether it fits the card before anything starts."></a>
+          <figcaption>A new deployment: pick a cached model and see whether it fits the card before anything starts.</figcaption>
+        </figure>
+        <figure class="shot">
+          <a href="/work/vllm/05b-conflict-dialog-crop.webp" class="shot__link"><img src="/work/vllm/05b-conflict-dialog-crop.webp" width="1024" height="612" loading="lazy" decoding="async" alt="Every action that could break a booked window is checked first, and refused with the exact reservation it would break."></a>
+          <figcaption>Every action that could break a booked window is checked first, and refused with the exact reservation it would break.</figcaption>
+        </figure>
+        <figure class="shot shot--wide">
+          <a href="/work/vllm/07-reservation-calendar.webp" class="shot__link"><img src="/work/vllm/07-reservation-calendar.webp" width="2880" height="2408" loading="lazy" decoding="async" alt="Reservations: external jobs book a model for a time window, and the planner guarantees the memory in advance."></a>
+          <figcaption>Reservations: external jobs book a model for a time window, and the planner guarantees the memory in advance.</figcaption>
+        </figure>
+        <figure class="shot shot--wide">
+          <a href="/work/vllm/07b-reservation-calendar-merged.webp" class="shot__link"><img src="/work/vllm/07b-reservation-calendar-merged.webp" width="2880" height="2408" loading="lazy" decoding="async" alt="Overlapping bookings on one model share one running container."></a>
+          <figcaption>Overlapping bookings on one model share one running container.</figcaption>
+        </figure>
+        <figure class="shot shot--wide shot--tall">
+          <a href="/work/vllm/06-analytics.webp" class="shot__link"><img src="/work/vllm/06-analytics.webp" width="2880" height="3016" loading="lazy" decoding="async" alt="Analytics from the gateway: success, latency percentiles, cold starts, top models and clients."></a>
+          <figcaption>Analytics from the gateway: success, latency percentiles, cold starts, top models and clients.</figcaption>
+        </figure>
+        <figure class="shot shot--wide">
+          <a href="/work/vllm/08-downloads.webp" class="shot__link"><img src="/work/vllm/08-downloads.webp" width="2880" height="1800" loading="lazy" decoding="async" alt="Model downloads with honest progress: an unknown size says so instead of guessing."></a>
+          <figcaption>Model downloads with honest progress: an unknown size says so instead of guessing.</figcaption>
+        </figure>
+        <figure class="shot shot--wide shot--tall">
+          <a href="/work/vllm/10-telemetry.webp" class="shot__link"><img src="/work/vllm/10-telemetry.webp" width="2880" height="5180" loading="lazy" decoding="async" alt="Per-card utilization, memory and temperature over time."></a>
+          <figcaption>Per-card utilization, memory and temperature over time.</figcaption>
+        </figure>
+        <figure class="shot shot--wide shot--tall">
+          <a href="/work/vllm/11-api.webp" class="shot__link"><img src="/work/vllm/11-api.webp" width="2880" height="2692" loading="lazy" decoding="async" alt="The API reference: the OpenAI endpoints, the operator actions and the reservations API."></a>
+          <figcaption>The API reference: the OpenAI endpoints, the operator actions and the reservations API.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <header class="section__head">
+        <p class="eyebrow">Architecture</p>
+        <h2 id="how-title">How it works</h2>
+      </header>
+      <ul class="work-list">
+        <li><strong>Two small services.</strong> A manager on the host drives Docker; a gateway in a container is the only client of the engines. The UI talks to the manager.</li>
+        <li><strong>One container per deployment.</strong> The GPU comes in through device injection, the model cache is mounted read-only, and the flags the scheduler owns (port, parallelism) cannot be overridden.</li>
+        <li><strong>Ready from the logs, not from probes.</strong> The manager follows the engine's log until it reports it is up, and reads the measured memory profile from the same stream. A start that hangs past its ceiling is killed and cleaned up.</li>
+        <li><strong>Admission by measured budgets.</strong> Each card has a table of measured memory floors against a ceiling, and one start at a time per card. Free memory is read only to refuse a start, never to admit one.</li>
+        <li><strong>Eviction that knows what it may stop.</strong> Only idle, lazy deployments go, least recently used first; pinned and reserved ones never. If a start would not fit even then, it is refused before anything stops.</li>
+        <li><strong>A gateway that hides cold starts.</strong> It routes by the name in <code>model</code>, asks the manager to make sure it runs, keeps the client's stream alive with comment keepalives, then passes the engine's bytes through untouched.</li>
+        <li><strong>One planner for every promise.</strong> Reservations, pins, edits and deletes all go through the same interval check, and a refusal names the item in the way.</li>
+        <li><strong>Docker is the source of truth.</strong> After a restart, the manager rebuilds its state from container labels before it admits anything.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="interesting" aria-labelledby="interesting-title">
+    <div class="wrap">
+      <header class="section__head">
+        <p class="eyebrow">Worth a look</p>
+        <h2 id="interesting-title">What I like about it</h2>
+      </header>
+      <ul class="work-list">
+        <li>Two starts can never both see free memory and both run out: admission uses measured profiles, with the engine log first, the driver second and an estimate last, and a stale profile is flagged in the UI.</li>
+        <li>A reservation admitted on an estimate is downgraded to unfulfillable as soon as a real measurement disproves it.</li>
+        <li>The streaming proxy is byte-for-byte faithful to the engine, yet the client never notices a model being loaded.</li>
+        <li>The whole host is declarative: the service, the engine image pinned by digest, and an offline test suite.</li>
+      </ul>
+    </div>
+  </section>
+      <p class="section__more"><a href="/#work">Back to what I build at work</a></p>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap site-footer__inner">
+    <p><a href="/">All projects</a> · <a href="https://github.com/HubertMJ">GitHub</a></p>
+    <p class="small">No cookies, no trackers, no third-party requests.</p>
+  </div>
+</footer>
+</body>
+</html>

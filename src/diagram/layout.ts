@@ -3,6 +3,7 @@
 // scripts/build.mjs, so the page carries the drawing before any script runs and builds no DOM for it.
 // Colours, fonts and the animation's switch live in styles.css: classes only here.
 
+import { panelMarkup } from "../node-panel/markup";
 import { DESTINATIONS, HOPS, TITLE, ZONES, describe, type Destination, type Hop } from "./model";
 
 type Pt = [number, number];
@@ -198,6 +199,14 @@ export function svg(dr: Drawing): string {
     el("g", { class: "em-traffic", "aria-hidden": "true" }, ...dots),
     ...nodes,
   );
+}
+
+/** The node panel under both drawings: each box's sentence, and for a page its repository and route. */
+export function panel(): string {
+  return panelMarkup("entry", [
+    ...HOPS.map((n) => ({ id: n.id, title: n.label, sub: n.sub, text: n.tip, role: "path" })),
+    ...DESTINATIONS.map((d) => ({ id: d.id, title: d.label, sub: `${d.repo} · ${d.route}`, text: d.tip, role: d.role, href: d.href })),
+  ]);
 }
 
 // ---------- traffic ----------

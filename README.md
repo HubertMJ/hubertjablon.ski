@@ -91,6 +91,9 @@ npm run test:e2e               # playwright (desktop + phone)
 - CSP `style-src 'self'` and Trusted Types: no inline styles or `innerHTML`; the DOM is built with
   `h()`/`replace()` from `src/lib/dom.ts`, dynamic sizes go through `style.setProperty`.
 - The page never scrolls or jumps by itself; a click redraws only its own panel.
+- `src/ascii/` and `src/node-panel/` are shared: the same files are copied into every repository that
+  serves a page of the site (detection-lab, work-mockups). `test/unit/node-panel.test.ts` pins the node
+  panel's fingerprint and compares a sibling checkout's copy byte for byte.
 
 ## Image
 

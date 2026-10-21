@@ -309,3 +309,77 @@ test("ASCII mode: a link turns it on, the diagram is drawn in characters, typing
   await expect(page.locator("html")).not.toHaveClass(/ascii/);
   expect(errors).toEqual([]);
 });
+
+// "The way in" in the normal look: a box's details slide out under the drawing (the node panel,
+// src/node-panel). Its slot is as tall as its tallest entry from the start, so the page never moves.
+test.describe("the way in: a box's details under the drawing", () => {
+  const visible = "svg.entry-map:visible";
+  const still = (page: import("@playwright/test").Page) => page.evaluate(() => [document.documentElement.scrollHeight, Math.round(scrollY)]);
+  const shown = (page: import("@playwright/test").Page) => page.locator(".np-item[data-on='true']");
+  // As Tab would, but without the browser scrolling a newly focused box into view: what is measured
+  // here is the panel, not the focus.
+  const focus = (l: import("@playwright/test").Locator) => l.evaluate((el) => (el as SVGElement).focus({ preventScroll: true }));
+
+  test("hover or focus shows a box's details; swapping and closing never move the page", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("console", (m) => {
+      if (m.type() === "error") errors.push(m.text());
+    });
+    await page.goto("/");
+    await page.locator(visible).scrollIntoViewIfNeeded();
+    const at0 = await still(page);
+    const panel = page.locator(".np-panel");
+    await expect(panel).toHaveAttribute("data-open", "false");
+    // Keyboard: a box that is not a link is a button; focus shows its details.
+    const gateway = page.locator(`${visible} [data-node="gateway"]`);
+    await expect(gateway).toHaveAttribute("role", "button");
+    await focus(gateway);
+    await expect(panel).toHaveAttribute("data-open", "true");
+    await expect(shown(page)).toContainText("Cilium's Gateway sends each path to the project that owns it.");
+    expect(await still(page)).toEqual(at0);
+    if (test.info().project.name === "desktop") {
+      // A mouse: pointing at another box swaps the details in place; leaving the drawing keeps them.
+      await page.locator(`${visible} [data-node="lab"]`).hover();
+      await expect(shown(page)).toContainText("Four renamed copies of one program");
+      await expect(panel).toHaveAttribute("data-role", "lab");
+      await page.mouse.move(2, 2);
+      await expect(shown(page)).toContainText("Four renamed copies of one program");
+      expect(await still(page)).toEqual(at0);
+    }
+    // Dispatched: a real click would first scroll the × into view, and the scroll is what is measured.
+    await page.locator(".np-close").dispatchEvent("click");
+    await expect(panel).toHaveAttribute("data-open", "false");
+    expect(await still(page)).toEqual(at0);
+    // Enter on the focused box opens it again; Escape closes it too.
+    await focus(gateway);
+    await page.keyboard.press("Enter");
+    await expect(panel).toHaveAttribute("data-open", "true");
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveAttribute("data-open", "false");
+    expect(await still(page)).toEqual(at0);
+    expect(errors).toEqual([]);
+  });
+
+  test("on a phone, the first tap on a page's box shows its details; Open → goes there", async ({ page }) => {
+    test.skip(test.info().project.name !== "phone", "touch");
+    await page.goto("/");
+    await page.locator(visible).scrollIntoViewIfNeeded();
+    const at0 = await still(page);
+    await page.locator(`${visible} [data-node="lab"] rect`).tap();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(shown(page)).toContainText("Four renamed copies of one program");
+    expect(await still(page)).toEqual(at0);
+    await Promise.all([page.waitForURL("**/lab/"), shown(page).getByRole("link", { name: "Open →" }).tap()]);
+  });
+
+  test("with reduced motion the panel shows at once; in ASCII mode it is not there", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    await focus(page.locator(`${visible} [data-node="gateway"]`));
+    await expect(page.locator(".np-panel")).toHaveAttribute("data-open", "true");
+    expect(await page.locator(".np-panel").evaluate((p) => getComputedStyle(p).transitionDuration.split(",").every((d) => parseFloat(d) === 0))).toBe(true);
+    await page.goto("/?ascii=1");
+    await expect(page.locator("html")).toHaveClass(/ascii/);
+    expect(await page.locator(".np-slot").evaluate((s) => getComputedStyle(s).display)).toBe("none");
+  });
+});

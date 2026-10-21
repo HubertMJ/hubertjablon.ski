@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Multi-GPU LLM deployment manager · Hubert Jabłoński</title>
-<meta name="description" content="A self-hosted control plane for several vLLM engines on one multi-GPU host: measured VRAM admission, reservations, and a gateway that hides cold starts. A mock-up of the real interface on made-up data.">
+<meta name="description" content="A self-hosted control plane for several vLLM engines on one multi-GPU host: measured VRAM admission, reservations, and a gateway that hides cold starts. An interactive demo on made-up data.">
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
@@ -12,7 +12,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/site-assets/{{styles.css}}">
 <script src="/site-assets/{{theme.js}}"></script>
-<script type="module" src="/site-assets/{{work.js}}"></script>
+<script type="module" src="/site-assets/{{vllm-demo.js}}"></script>
 </head>
 <body data-banner="vLLM manager">
 <a class="skip-link" href="#main">Skip to content</a>
@@ -41,76 +41,24 @@
 <main id="main" tabindex="-1" class="landing work-page">
   <section class="hero landing-hero work-hero" id="top" aria-labelledby="page-title">
     <div class="wrap">
-      <p class="eyebrow">At work · mock-up</p>
+      <p class="eyebrow">At work · interactive demo</p>
       <h1 id="page-title">A multi-GPU LLM deployment manager</h1>
       <p class="hero__lead">A self-hosted control plane that runs several vLLM inference engines on one four-GPU host, each in its own container, behind a single OpenAI-compatible endpoint. An operator registers a model, its GPU and its limits; clients just name it in <code>model</code>, and a stopped one starts on demand.</p>
-      <p class="work-note">The code is not public. Every screenshot below is the real interface, rendered on made-up data: the hosts, models, clients and numbers are invented.</p>
+      <p class="work-note">The code is not public. Below is an interactive demo on made-up data: nothing here talks to a real GPU. It is written from scratch for this page and runs entirely in your browser; the hosts, models, clients and numbers are invented. Screenshots of the real interface follow at the end.</p>
     </div>
   </section>
 
-  <section class="section" id="screens" aria-labelledby="screens-title">
+  <section class="section vd-section" id="demo" aria-labelledby="demo-title">
     <div class="wrap">
       <header class="section__head">
-        <p class="eyebrow">The interface</p>
-        <h2 id="screens-title">What the operator sees</h2>
+        <p class="eyebrow">Try it</p>
+        <h2 id="demo-title">The manager, in your browser</h2>
+        <p class="section__lead">Start and stop deployments and watch the card's memory budget decide; start one that does not fit; pin a booked one; send a prompt to a stopped model and watch the gateway cold-start it. It starts from the same state on every load, and "Reset demo" brings it back.</p>
       </header>
-      <div class="shots">
-        <figure class="shot shot--wide shot--tall">
-          <a href="/work/vllm/01-deployments.webp" class="shot__link"><img src="/work/vllm/01-deployments.webp" width="2880" height="6014" loading="lazy" decoding="async" alt="Deployments: what runs where, a quick-test playground, the latest requests and every deployment as a card."></a>
-          <figcaption>Deployments: what runs where, a quick-test playground, the latest requests and every deployment as a card.</figcaption>
-        </figure>
-        <figure class="shot shot--wide">
-          <a href="/work/vllm/02-gpu-vram.webp" class="shot__link"><img src="/work/vllm/02-gpu-vram.webp" width="2496" height="1130" loading="lazy" decoding="async" alt="The VRAM budget per card: measured use against a 95% ceiling, what is resident, and a card blocked for a driver update."></a>
-          <figcaption>The VRAM budget per card: measured use against a 95% ceiling, what is resident, and a card blocked for a driver update.</figcaption>
-        </figure>
-        <figure class="shot">
-          <a href="/work/vllm/03a-card-running.webp" class="shot__link"><img src="/work/vllm/03a-card-running.webp" width="812" height="760" loading="lazy" decoding="async" alt="A running deployment: measured memory floor, context, KV cache and concurrency."></a>
-          <figcaption>A running deployment: measured memory floor, context, KV cache and concurrency.</figcaption>
-        </figure>
-        <figure class="shot">
-          <a href="/work/vllm/03b-card-starting.webp" class="shot__link"><img src="/work/vllm/03b-card-starting.webp" width="812" height="824" loading="lazy" decoding="async" alt="Starting: admitted on an estimate until the engine reports its real profile."></a>
-          <figcaption>Starting: admitted on an estimate until the engine reports its real profile.</figcaption>
-        </figure>
-        <figure class="shot">
-          <a href="/work/vllm/03c-card-error.webp" class="shot__link"><img src="/work/vllm/03c-card-error.webp" width="812" height="824" loading="lazy" decoding="async" alt="A failed start keeps its reason in a dismissible error box."></a>
-          <figcaption>A failed start keeps its reason in a dismissible error box.</figcaption>
-        </figure>
-        <figure class="shot">
-          <a href="/work/vllm/03d-card-stopped.webp" class="shot__link"><img src="/work/vllm/03d-card-stopped.webp" width="812" height="824" loading="lazy" decoding="async" alt="Stopped, and lazy: the first request that names it starts it again."></a>
-          <figcaption>Stopped, and lazy: the first request that names it starts it again.</figcaption>
-        </figure>
-        <figure class="shot shot--tall">
-          <a href="/work/vllm/04b-new-deployment-full.webp" class="shot__link"><img src="/work/vllm/04b-new-deployment-full.webp" width="1344" height="3804" loading="lazy" decoding="async" alt="A new deployment: pick a cached model and see whether it fits the card before anything starts."></a>
-          <figcaption>A new deployment: pick a cached model and see whether it fits the card before anything starts.</figcaption>
-        </figure>
-        <figure class="shot">
-          <a href="/work/vllm/05b-conflict-dialog-crop.webp" class="shot__link"><img src="/work/vllm/05b-conflict-dialog-crop.webp" width="1024" height="612" loading="lazy" decoding="async" alt="Every action that could break a booked window is checked first, and refused with the exact reservation it would break."></a>
-          <figcaption>Every action that could break a booked window is checked first, and refused with the exact reservation it would break.</figcaption>
-        </figure>
-        <figure class="shot shot--wide">
-          <a href="/work/vllm/07-reservation-calendar.webp" class="shot__link"><img src="/work/vllm/07-reservation-calendar.webp" width="2880" height="2408" loading="lazy" decoding="async" alt="Reservations: external jobs book a model for a time window, and the planner guarantees the memory in advance."></a>
-          <figcaption>Reservations: external jobs book a model for a time window, and the planner guarantees the memory in advance.</figcaption>
-        </figure>
-        <figure class="shot shot--wide">
-          <a href="/work/vllm/07b-reservation-calendar-merged.webp" class="shot__link"><img src="/work/vllm/07b-reservation-calendar-merged.webp" width="2880" height="2408" loading="lazy" decoding="async" alt="Overlapping bookings on one model share one running container."></a>
-          <figcaption>Overlapping bookings on one model share one running container.</figcaption>
-        </figure>
-        <figure class="shot shot--wide shot--tall">
-          <a href="/work/vllm/06-analytics.webp" class="shot__link"><img src="/work/vllm/06-analytics.webp" width="2880" height="3016" loading="lazy" decoding="async" alt="Analytics from the gateway: success, latency percentiles, cold starts, top models and clients."></a>
-          <figcaption>Analytics from the gateway: success, latency percentiles, cold starts, top models and clients.</figcaption>
-        </figure>
-        <figure class="shot shot--wide">
-          <a href="/work/vllm/08-downloads.webp" class="shot__link"><img src="/work/vllm/08-downloads.webp" width="2880" height="1800" loading="lazy" decoding="async" alt="Model downloads with honest progress: an unknown size says so instead of guessing."></a>
-          <figcaption>Model downloads with honest progress: an unknown size says so instead of guessing.</figcaption>
-        </figure>
-        <figure class="shot shot--wide shot--tall">
-          <a href="/work/vllm/10-telemetry.webp" class="shot__link"><img src="/work/vllm/10-telemetry.webp" width="2880" height="5180" loading="lazy" decoding="async" alt="Per-card utilization, memory and temperature over time."></a>
-          <figcaption>Per-card utilization, memory and temperature over time.</figcaption>
-        </figure>
-        <figure class="shot shot--wide shot--tall">
-          <a href="/work/vllm/11-api.webp" class="shot__link"><img src="/work/vllm/11-api.webp" width="2880" height="2692" loading="lazy" decoding="async" alt="The API reference: the OpenAI endpoints, the operator actions and the reservations API."></a>
-          <figcaption>The API reference: the OpenAI endpoints, the operator actions and the reservations API.</figcaption>
-        </figure>
+    </div>
+    <div class="wrap vd-wrap">
+      <div id="vdemo" class="vdemo">
+        <noscript><p class="vd-noscript">The demo needs JavaScript. The screenshots at the end of the page show the real interface.</p></noscript>
       </div>
     </div>
   </section>
@@ -146,6 +94,33 @@
         <li>The streaming proxy is byte-for-byte faithful to the engine, yet the client never notices a model being loaded.</li>
         <li>The whole host is declarative: the service, the engine image pinned by digest, and an offline test suite.</li>
       </ul>
+    </div>
+  </section>
+  <section class="section" id="screens" aria-labelledby="screens-title">
+    <div class="wrap">
+      <header class="section__head">
+        <p class="eyebrow">For comparison</p>
+        <h2 id="screens-title">The real interface</h2>
+        <p class="section__lead">The production frontend, rendered against mocked data, so the demo above can be held against it.</p>
+      </header>
+      <div class="shots">
+        <figure class="shot shot--wide shot--tall">
+          <a href="/work/vllm/01-deployments.webp" class="shot__link"><img src="/work/vllm/01-deployments.webp" width="2880" height="6014" loading="lazy" decoding="async" alt="Deployments: what runs where, a quick-test playground, the latest requests and every deployment as a card."></a>
+          <figcaption>Deployments: what runs where, a quick-test playground, the latest requests and every deployment as a card.</figcaption>
+        </figure>
+        <figure class="shot shot--wide">
+          <a href="/work/vllm/02-gpu-vram.webp" class="shot__link"><img src="/work/vllm/02-gpu-vram.webp" width="2496" height="1130" loading="lazy" decoding="async" alt="The VRAM budget per card: measured use against a 95% ceiling, what is resident, and a card blocked for a driver update."></a>
+          <figcaption>The VRAM budget per card: measured use against a 95% ceiling, what is resident, and a card blocked for a driver update.</figcaption>
+        </figure>
+        <figure class="shot shot--wide">
+          <a href="/work/vllm/07-reservation-calendar.webp" class="shot__link"><img src="/work/vllm/07-reservation-calendar.webp" width="2880" height="2408" loading="lazy" decoding="async" alt="Reservations: external jobs book a model for a time window, and the planner guarantees the memory in advance."></a>
+          <figcaption>Reservations: external jobs book a model for a time window, and the planner guarantees the memory in advance.</figcaption>
+        </figure>
+        <figure class="shot shot--wide shot--tall">
+          <a href="/work/vllm/10-telemetry.webp" class="shot__link"><img src="/work/vllm/10-telemetry.webp" width="2880" height="5180" loading="lazy" decoding="async" alt="Per-card utilization, memory and temperature over time."></a>
+          <figcaption>Per-card utilization, memory and temperature over time.</figcaption>
+        </figure>
+      </div>
     </div>
   </section>
       <p class="section__more"><a href="/#work">Back to what I build at work</a></p>

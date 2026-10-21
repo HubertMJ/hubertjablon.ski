@@ -321,5 +321,5 @@ test("the /work/ pages load, fit the screen and show their screenshots", async (
     expect(errors).toEqual([]);
   }
   await page.goto("/work/vllm/");
-  await expect(page.locator(".shot img")).toHaveCount(14);
+  await expect(page.locator(".shot img")).toHaveCount(4);
 });

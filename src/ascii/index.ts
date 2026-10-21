@@ -192,7 +192,8 @@ function scan(): void {
     tip.className = "ascii-tip";
     tip.setAttribute("aria-hidden", "true");
     tip.hidden = true;
-    document.body.append(tip);
+    // In a modal dialog (the vLLM mock-up's About drawer) the popup must sit in it: the dialog is above the page.
+    (svg.closest("dialog") ?? document.body).append(tip);
     const v: View = { svg, pre, d: fromSvg(svg, narrow ? 48 : 176), dirty: false, onScreen: true, mo: new MutationObserver(() => { v.dirty = true; }),
       io: new IntersectionObserver((es) => { for (const e of es) v.onScreen = e.isIntersecting; }), packets: [], fx: new Map(), wasLit: new Map(), wasState: new Map(), t: 0,
       hover: null, tip, tipFor: null, tipT: 0 };

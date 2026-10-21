@@ -198,7 +198,8 @@ test.describe("the way in", () => {
 
   test("a dot runs each route; none with reduced motion", async ({ page }) => {
     await page.goto("/");
-    expect(await dots(page)).toEqual(Array(4).fill("inline:running"));
+    // One dot per page the Gateway routes to: this site, the lab, the /work/ pages, the cluster and its API.
+    expect(await dots(page)).toEqual(Array(5).fill("inline:running"));
     // It moves: two looks a moment apart see it somewhere else.
     const at = () => page.locator(`${visible} .em-dot`).first().evaluate((d) => d.getBoundingClientRect().x);
     await page.locator(visible).scrollIntoViewIfNeeded();
@@ -208,7 +209,7 @@ test.describe("the way in", () => {
     expect(await at()).not.toBe(x0);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.reload();
-    expect(await dots(page)).toEqual(Array(4).fill("none:"));
+    expect(await dots(page)).toEqual(Array(5).fill("none:"));
   });
 
   test("every box but this page's opens its page, sliding in from the right; this page's is not a link", async ({ page }) => {
@@ -275,6 +276,7 @@ test("ASCII mode: a link turns it on, the diagram is drawn in characters, typing
   await expect(dg).toHaveCount(1);
   await expect(dg).toContainText("Cloudflare edge");
   await expect(dg).toContainText("Detection lab");
+  await expect(dg).toContainText("Work pages");
   await expect(page.locator(".ascii-banner")).toBeVisible();
   // Sized once its font is in (a frame later at most).
   await expect.poll(() => dg.evaluate((el) => el.scrollWidth <= (el.parentElement as HTMLElement).clientWidth + 1)).toBe(true);
@@ -305,5 +307,110 @@ test("ASCII mode: a link turns it on, the diagram is drawn in characters, typing
   await expect(page.locator("main h1")).toHaveClass(/ascii-said/);
   for (let i = 0; i < 5; i++) await page.locator(".ascii-banner").click();
   await expect(page.locator("html")).not.toHaveClass(/ascii/);
+  expect(errors).toEqual([]);
+});
+
+// "The way in" in the normal look: a box's details slide out under the drawing (the node panel,
+// src/node-panel). Its slot is as tall as its tallest entry from the start, so the page never moves.
+test.describe("the way in: a box's details under the drawing", () => {
+  const visible = "svg.entry-map:visible";
+  const still = (page: import("@playwright/test").Page) => page.evaluate(() => [document.documentElement.scrollHeight, Math.round(scrollY)]);
+  const shown = (page: import("@playwright/test").Page) => page.locator(".np-item[data-on='true']");
+  // As Tab would, but without the browser scrolling a newly focused box into view: what is measured
+  // here is the panel, not the focus.
+  const focus = (l: import("@playwright/test").Locator) => l.evaluate((el) => (el as SVGElement).focus({ preventScroll: true }));
+
+  test("hover or focus shows a box's details; swapping and closing never move the page", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("console", (m) => {
+      if (m.type() === "error") errors.push(m.text());
+    });
+    await page.goto("/");
+    await page.locator(visible).scrollIntoViewIfNeeded();
+    const at0 = await still(page);
+    const panel = page.locator(".np-panel");
+    await expect(panel).toHaveAttribute("data-open", "false");
+    // Keyboard: a box that is not a link is a button; focus shows its details.
+    const gateway = page.locator(`${visible} [data-node="gateway"]`);
+    await expect(gateway).toHaveAttribute("role", "button");
+    await focus(gateway);
+    await expect(panel).toHaveAttribute("data-open", "true");
+    await expect(shown(page)).toContainText("Cilium's Gateway sends each path to the project that owns it.");
+    expect(await still(page)).toEqual(at0);
+    // The box hugs the entry that shows, while the slot keeps the tallest entry's height: a short entry
+    // (the visitor's) sits in a box well short of the slot.
+    const sizes = () =>
+      page.locator(".entry-figure").evaluate((f) => {
+        const hgt = (sel: string) => f.querySelector(sel)?.getBoundingClientRect().height ?? 0;
+        return { box: hgt(".np-box"), item: hgt(".np-item[data-on='true']"), slot: hgt(".np-slot") };
+      });
+    await expect.poll(async () => { const z = await sizes(); return Math.abs(z.box - z.item) < 2; }).toBe(true);
+    await focus(page.locator(`${visible} [data-node="visitor"]`));
+    await expect.poll(async () => { const z = await sizes(); return Math.abs(z.box - z.item) < 2 && z.box < z.slot - 20; }).toBe(true);
+    expect(await still(page)).toEqual(at0);
+    if (test.info().project.name === "desktop") {
+      // A mouse: pointing at another box swaps the details in place; leaving the drawing keeps them.
+      await page.locator(`${visible} [data-node="lab"]`).hover();
+      await expect(shown(page)).toContainText("Four renamed copies of one program");
+      await expect(panel).toHaveAttribute("data-role", "lab");
+      await page.mouse.move(2, 2);
+      await expect(shown(page)).toContainText("Four renamed copies of one program");
+      expect(await still(page)).toEqual(at0);
+    }
+    // Dispatched: a real click would first scroll the × into view, and the scroll is what is measured.
+    await page.locator(".np-close").dispatchEvent("click");
+    await expect(panel).toHaveAttribute("data-open", "false");
+    expect(await still(page)).toEqual(at0);
+    // Enter on the focused box opens it again; Escape closes it too.
+    await focus(gateway);
+    await page.keyboard.press("Enter");
+    await expect(panel).toHaveAttribute("data-open", "true");
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveAttribute("data-open", "false");
+    expect(await still(page)).toEqual(at0);
+    expect(errors).toEqual([]);
+  });
+
+  test("on a phone, the first tap on a page's box shows its details; Open → goes there", async ({ page }) => {
+    test.skip(test.info().project.name !== "phone", "touch");
+    await page.goto("/");
+    await page.locator(visible).scrollIntoViewIfNeeded();
+    const at0 = await still(page);
+    await page.locator(`${visible} [data-node="lab"] rect`).tap();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(shown(page)).toContainText("Four renamed copies of one program");
+    expect(await still(page)).toEqual(at0);
+    await Promise.all([page.waitForURL("**/lab/"), shown(page).getByRole("link", { name: "Open →" }).tap()]);
+  });
+
+  test("with reduced motion the panel shows at once; in ASCII mode it is not there", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    await focus(page.locator(`${visible} [data-node="gateway"]`));
+    await expect(page.locator(".np-panel")).toHaveAttribute("data-open", "true");
+    expect(await page.locator(".np-panel").evaluate((p) => getComputedStyle(p).transitionDuration.split(",").every((d) => parseFloat(d) === 0))).toBe(true);
+    await page.goto("/?ascii=1");
+    await expect(page.locator("html")).toHaveClass(/ascii/);
+    expect(await page.locator(".np-slot").evaluate((s) => getComputedStyle(s).display)).toBe("none");
+  });
+});
+
+// The console greeting (src/console-hello) stays quiet under automation, so it never shows in the
+// suites' console checks. Here automation is masked to see a person's view: printed once, no errors.
+test("the console greets a person once per page load, without an error", async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(Navigator.prototype, "webdriver", { configurable: true, get: () => false }));
+  const logs: string[] = [];
+  const errors: string[] = [];
+  page.on("console", (m) => {
+    if (m.type() === "log") logs.push(m.text());
+    if (m.type() === "error") errors.push(m.text());
+  });
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/");
+  await expect.poll(() => logs.filter((l) => l.includes("You opened the console")).length).toBe(1);
+  expect(logs.some((l) => l.includes("github.com/HubertMJ/hubertjablon.ski"))).toBe(true);
+  expect(logs.some((l) => l.includes("?ascii=1"))).toBe(true);
+  await page.waitForTimeout(300);
+  expect(logs.filter((l) => l.includes("You opened the console")).length).toBe(1);
   expect(errors).toEqual([]);
 });

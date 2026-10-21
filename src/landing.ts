@@ -3,6 +3,8 @@
 // is sent there with it - a navigation, never a scroll on this page. So is the old ?mock=1.
 
 import { setupAscii } from "./ascii";
+import { sayHello } from "./console-hello";
+import { mountNodePanels } from "./node-panel";
 import { setupThemeToggle } from "./lib/theme-toggle";
 
 function toCluster(): void {
@@ -16,3 +18,7 @@ addEventListener("hashchange", toCluster);
 document.documentElement.classList.add("js");
 setupThemeToggle();
 setupAscii("Hubert Jabłoński");
+// "The way in": pointing at a box, tapping or focusing it shows its details under the drawing.
+mountNodePanels();
+// A greeting for whoever opens the console.
+sayHello({ repo: "hubertjablon.ski" });

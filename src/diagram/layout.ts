@@ -3,6 +3,7 @@
 // scripts/build.mjs, so the page carries the drawing before any script runs and builds no DOM for it.
 // Colours, fonts and the animation's switch live in styles.css: classes only here.
 
+import { panelMarkup } from "../node-panel/markup";
 import { DESTINATIONS, HOPS, TITLE, ZONES, describe, type Destination, type Hop } from "./model";
 
 type Pt = [number, number];
@@ -200,14 +201,22 @@ export function svg(dr: Drawing): string {
   );
 }
 
+/** The node panel under both drawings: each box's sentence, and for a page its repository and route. */
+export function panel(): string {
+  return panelMarkup("entry", [
+    ...HOPS.map((n) => ({ id: n.id, title: n.label, sub: n.sub, text: n.tip, role: "path" })),
+    ...DESTINATIONS.map((d) => ({ id: d.id, title: d.label, sub: `${d.repo} · ${d.route}`, text: d.tip, role: d.role, href: d.href })),
+  ]);
+}
+
 // ---------- traffic ----------
 
 /**
- * Every 2.7 s a dot runs from the visitor to one of the pages, each page in turn (10.8 s round). Its
+ * Every 2.7 s a dot runs from the visitor to one of the pages, each page in turn (a round of 2.7 s a page). Its
  * route (offset-path) and timing (keyframes) per drawing, as CSS: the page's CSP allows no style
  * attribute. styles.css shows and runs the dots only when motion is welcome.
  */
-export const TRAFFIC = { period: 10.8, every: 2.7, travel: 2.6, hop: 0.14 } as const;
+export const TRAFFIC = { period: 2.7 * DESTINATIONS.length, every: 2.7, travel: 2.6, hop: 0.14 } as const;
 
 function laneCss(dr: Drawing, d: Destination, i: number): string {
   const p = dr.view === "wide" ? "em" : "emn";

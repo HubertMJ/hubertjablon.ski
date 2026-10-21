@@ -11,6 +11,8 @@
 @import "entry-traffic.css";
 /* ASCII mode, the hidden terminal look (src/ascii): inert unless html.ascii is set. */
 @import "./ascii/ascii.css";
+/* The diagrams' node panel (src/node-panel): a box's details under the drawing, in the normal look. */
+@import "./node-panel/node-panel.css";
 
 :root {
   color-scheme: dark;
@@ -31,6 +33,7 @@
   --role-entry: #6cb6ff;
   --role-record: #b392f0;
   --role-lab: #c08af2;
+  --role-work: #f08bb4;
   --role-tint: 13%;
   --good: #3fcf6b;
   --warning: #f4bf4f;
@@ -71,6 +74,8 @@
     --role-entry: #0969da;
     --role-record: #8250df;
     --role-lab: #7c3aed;
+  --role-work: #b8326e;
+    --role-work: #b8326e;
     --role-tint: 9%;
     --good: #12823b;
     --warning: #9a6700;
@@ -1165,6 +1170,11 @@ html[data-folded~="projects"] #projects
   fill: color-mix(in srgb, var(--role-lab) var(--role-tint), var(--surface));
 }
 
+.em-work rect {
+  stroke: var(--role-work);
+  fill: color-mix(in srgb, var(--role-work) var(--role-tint), var(--surface));
+}
+
 .em-label {
   font: 650 14px var(--font-sans);
   fill: var(--text);
@@ -1245,6 +1255,11 @@ html[data-folded~="projects"] #projects
 .em-dot--lab {
   fill: var(--role-lab);
   filter: drop-shadow(0 0 3px var(--role-lab));
+}
+
+.em-dot--work {
+  fill: var(--role-work);
+  filter: drop-shadow(0 0 3px var(--role-work));
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -1356,5 +1371,6 @@ html.slide-out-backward body > :not(.site-header) {
    words or open the text callout. */
 .entry-map { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 
-/* The projects from work (served at /work/ by the work-mockups image): their cards' top edge. */
-.card--work { border-top-color: var(--role-record); }
+/* The projects from work (served at /work/ by the work-mockups image): their cards' top edge, in the
+   colour their box has in "The way in". */
+.card--work { border-top-color: var(--role-work); }

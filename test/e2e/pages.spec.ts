@@ -337,6 +337,17 @@ test.describe("the way in: a box's details under the drawing", () => {
     await expect(panel).toHaveAttribute("data-open", "true");
     await expect(shown(page)).toContainText("Cilium's Gateway sends each path to the project that owns it.");
     expect(await still(page)).toEqual(at0);
+    // The box hugs the entry that shows, while the slot keeps the tallest entry's height: a short entry
+    // (the visitor's) sits in a box well short of the slot.
+    const sizes = () =>
+      page.locator(".entry-figure").evaluate((f) => {
+        const hgt = (sel: string) => f.querySelector(sel)?.getBoundingClientRect().height ?? 0;
+        return { box: hgt(".np-box"), item: hgt(".np-item[data-on='true']"), slot: hgt(".np-slot") };
+      });
+    await expect.poll(async () => { const z = await sizes(); return Math.abs(z.box - z.item) < 2; }).toBe(true);
+    await focus(page.locator(`${visible} [data-node="visitor"]`));
+    await expect.poll(async () => { const z = await sizes(); return Math.abs(z.box - z.item) < 2 && z.box < z.slot - 20; }).toBe(true);
+    expect(await still(page)).toEqual(at0);
     if (test.info().project.name === "desktop") {
       // A mouse: pointing at another box swaps the details in place; leaving the drawing keeps them.
       await page.locator(`${visible} [data-node="lab"]`).hover();

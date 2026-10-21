@@ -7,10 +7,13 @@ their own deployment.
 |---|---|---|
 | `/` | Landing page: intro, project cards, "The way in" diagram, About | `src/landing.html`, `src/landing.ts`, `src/diagram/` |
 | `/cluster/`, `/cluster/api` | Self-defending cluster | [self-defending-portfolio](https://github.com/HubertMJ/self-defending-portfolio) |
+| `/lab/` | Detection lab | [detection-lab](https://github.com/HubertMJ/detection-lab) |
+| `/work/` | Systems from work, as mock-ups and descriptions | [work-mockups](https://github.com/HubertMJ/work-mockups) |
 
 Assets live under `/site-assets/`, not `/assets/`: both images sit behind one hostname, and
 `/assets/`, `/favicon.svg` and `/robots.txt` belong to the cluster page. The Gateway sends `/`
-(exact) and `/site-assets/` here and everything else to self-defending-portfolio.
+(exact) and `/site-assets/` here, `/lab/` and `/work/` to their own images, and everything else to
+self-defending-portfolio.
 
 The landing page sends old single-page links (`/#verify`, `/?mock=1`, ...) on to `/cluster/`.
 
@@ -19,8 +22,9 @@ with its own deployed image; the Gateway serves `/lab/` from it. The landing pag
 lab card and diagram node, which link to `/lab/`.
 
 The `/work/` pages (the vLLM deployment manager mock-up, the git forge bridge and Flota) live in their
-own repository too, work-mockups, with their own image; the Gateway is to serve `/work/` from it. The
-landing page carries their three project cards, which link under `/work/`.
+own repository too, [work-mockups](https://github.com/HubertMJ/work-mockups), with their own image; the
+Gateway serves `/work/` from it. The landing page carries their three project cards and the Work
+pages diagram node, which link under `/work/`.
 
 ## How a request reaches it
 
@@ -32,20 +36,24 @@ flowchart LR
     GW -- "/ (exact), /site-assets/" --> SITE["ns site<br/>this repository's image"]
     SITE -- "/" --> HOME["This site<br/>the landing page"]
     GW -- "/lab/" --> LAB["Detection lab<br/>the detection-lab image"]
+    GW -- "/work/" --> WORK["Work pages<br/>the work-mockups image"]
     GW -- "/cluster/ and every other path" --> HELLO["ns hello<br/>the cluster page"]
     GW -- "/cluster/api" --> API["ns portfolio-api"]
     classDef here fill:#e7f5ec,stroke:#2f855a;
     classDef other fill:#fdf0e6,stroke:#c05621;
     classDef lab fill:#f1e9fd,stroke:#7c3aed;
+    classDef work fill:#fce8f1,stroke:#b8326e;
     class SITE,HOME here;
     class HELLO,API other;
     class LAB lab;
+    class WORK work;
 ```
 
 Green is this repository; orange is [self-defending-portfolio](https://github.com/HubertMJ/self-defending-portfolio),
 which also holds the cluster manifests that run this image (`cluster/infra/site/`); violet is
 [detection-lab](https://github.com/HubertMJ/detection-lab), which builds and runs the `/lab/` page's
-own image. The landing page draws the same path in its "The way in" section, from
+own image; rose is [work-mockups](https://github.com/HubertMJ/work-mockups), which builds and runs the
+`/work/` pages' image. The landing page draws the same path in its "The way in" section, from
 `src/diagram/model.ts` at build time
 (`scripts/build.mjs`): a dot runs each route in turn (not with reduced motion), and every box but
 the page you are on opens its page. A unit test holds this diagram to the model's routes.

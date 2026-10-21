@@ -198,7 +198,8 @@ test.describe("the way in", () => {
 
   test("a dot runs each route; none with reduced motion", async ({ page }) => {
     await page.goto("/");
-    expect(await dots(page)).toEqual(Array(4).fill("inline:running"));
+    // One dot per page the Gateway routes to: this site, the lab, the /work/ pages, the cluster and its API.
+    expect(await dots(page)).toEqual(Array(5).fill("inline:running"));
     // It moves: two looks a moment apart see it somewhere else.
     const at = () => page.locator(`${visible} .em-dot`).first().evaluate((d) => d.getBoundingClientRect().x);
     await page.locator(visible).scrollIntoViewIfNeeded();
@@ -208,7 +209,7 @@ test.describe("the way in", () => {
     expect(await at()).not.toBe(x0);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.reload();
-    expect(await dots(page)).toEqual(Array(4).fill("none:"));
+    expect(await dots(page)).toEqual(Array(5).fill("none:"));
   });
 
   test("every box but this page's opens its page, sliding in from the right; this page's is not a link", async ({ page }) => {
@@ -275,6 +276,7 @@ test("ASCII mode: a link turns it on, the diagram is drawn in characters, typing
   await expect(dg).toHaveCount(1);
   await expect(dg).toContainText("Cloudflare edge");
   await expect(dg).toContainText("Detection lab");
+  await expect(dg).toContainText("Work pages");
   await expect(page.locator(".ascii-banner")).toBeVisible();
   // Sized once its font is in (a frame later at most).
   await expect.poll(() => dg.evaluate((el) => el.scrollWidth <= (el.parentElement as HTMLElement).clientWidth + 1)).toBe(true);

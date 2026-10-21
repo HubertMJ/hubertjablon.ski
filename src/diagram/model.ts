@@ -2,8 +2,9 @@
 // scripts/build.mjs draws it into the page (layout.ts: a wide and a phone drawing, and the stylesheet
 // that moves the traffic along it); a unit test holds README.md's diagram to the same routes.
 
-/** A box's colour: the path every request takes, this site's pages, the self-defending cluster's, the detection lab's. */
-export type Role = "path" | "site" | "project" | "lab";
+/** A box's colour: the path every request takes, this site's pages, the self-defending cluster's, the
+ * detection lab's, the /work/ pages'. */
+export type Role = "path" | "site" | "project" | "lab" | "work";
 
 export interface Hop {
   id: string;
@@ -44,6 +45,7 @@ export const HOPS: Hop[] = [
 export const DESTINATIONS: Destination[] = [
   { id: "home", label: "This site", repo: "hubertjablon.ski", role: "site", route: "/", tip: "This page: its own repository, its own signed image and CI." },
   { id: "lab", label: "Detection lab", repo: "detection-lab", role: "lab", route: "/lab/", href: "/lab/", tip: "Four renamed copies of one program on an isolated VM: which rules still catch them?" },
+  { id: "work", label: "Work pages", repo: "work-mockups", role: "work", route: "/work/", href: "/work/vllm/", tip: "Systems I built and run at work, as mock-ups and descriptions: their code isn't public." },
   { id: "cluster", label: "Self-defending cluster", repo: "self-defending-portfolio", role: "project", route: "/cluster/", href: "/cluster/", tip: "A hardened k3s cluster you can attack from your browser, and watch it answer." },
   { id: "api", label: "Cluster API", repo: "self-defending-portfolio", role: "project", route: "/cluster/api", href: "/cluster/#verify", tip: "The cluster's API: live posture, attack runs and the provenance of its images." },
 ];

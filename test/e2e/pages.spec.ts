@@ -383,3 +383,23 @@ test.describe("the way in: a box's details under the drawing", () => {
     expect(await page.locator(".np-slot").evaluate((s) => getComputedStyle(s).display)).toBe("none");
   });
 });
+
+// The console greeting (src/console-hello) stays quiet under automation, so it never shows in the
+// suites' console checks. Here automation is masked to see a person's view: printed once, no errors.
+test("the console greets a person once per page load, without an error", async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(Navigator.prototype, "webdriver", { configurable: true, get: () => false }));
+  const logs: string[] = [];
+  const errors: string[] = [];
+  page.on("console", (m) => {
+    if (m.type() === "log") logs.push(m.text());
+    if (m.type() === "error") errors.push(m.text());
+  });
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/");
+  await expect.poll(() => logs.filter((l) => l.includes("You opened the console")).length).toBe(1);
+  expect(logs.some((l) => l.includes("github.com/HubertMJ/hubertjablon.ski"))).toBe(true);
+  expect(logs.some((l) => l.includes("?ascii=1"))).toBe(true);
+  await page.waitForTimeout(300);
+  expect(logs.filter((l) => l.includes("You opened the console")).length).toBe(1);
+  expect(errors).toEqual([]);
+});

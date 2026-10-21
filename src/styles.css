@@ -1355,3 +1355,6 @@ html.slide-out-backward body > :not(.site-header) {
 /* Diagrams are drawings, not text: a drag, double-click or long-press on a box must not select its
    words or open the text callout. */
 .entry-map { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+
+/* The projects from work (served at /work/ by the work-mockups image): their cards' top edge. */
+.card--work { border-top-color: var(--role-record); }

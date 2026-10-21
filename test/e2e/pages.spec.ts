@@ -9,7 +9,13 @@ import { expect, test } from "@playwright/test";
 test.describe("landing page", () => {
   test("the landing page lists both projects and sends the old single page's links on to /cluster/", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator(".card")).toHaveCount(2);
+    // Five equal project cards, in order: the two live ones, then three systems from work (under /work/).
+    await expect(page.locator("#projects .card")).toHaveCount(5);
+    expect(await page.locator("#projects .card__title a").evaluateAll((as) => as.map((a) => a.getAttribute("href")))).toEqual(["/cluster/", "/lab/", "/work/vllm/", "/work/bridge/", "/work/flota/"]);
+    await expect(page.locator("#projects .card__status")).toHaveText(["Live", "Live", "Mock-up", "How it works", "Tool"]);
+    expect(await page.locator("#projects .card__actions a:last-child").evaluateAll((as) => as.slice(2).map((a) => a.textContent))).toEqual(["Open the mock-up", "How it works", "How it works"]);
+    await expect(page.locator("#work")).toHaveCount(0);
+    await expect(page.locator('.site-nav a[href="#work"]')).toHaveCount(0);
     // Both projects are live now, so match each card by its link, not its status class.
     await expect(page.locator('.card--live .card__title a[href="/cluster/"]')).toHaveCount(1);
     await expect(page.locator('.card--live .card__title a[href="/lab/"]')).toHaveCount(1);

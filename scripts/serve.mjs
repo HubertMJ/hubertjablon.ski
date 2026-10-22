@@ -18,11 +18,11 @@ const dir = resolve(arg("--dir", "dist"));
 const port = Number(arg("--port", "4173"));
 
 // Test-only stand-ins for the paths other images serve on this origin (the cluster at /cluster/, the
-// detection lab at /lab/). The e2e slide tests navigate to them to prove the hand-played slide between
+// detection lab at /lab/, the work pages at /work/…). The e2e slide tests navigate to them to prove the hand-played slide between
 // "desktops" (styles.css, theme.ts); with --e2e this server answers those paths with a minimal page
 // carrying the real <head> (so theme.js runs and the arrival slide plays) instead of a 404. Never
 // enabled for `npm run serve`, and nginx (the image) still 404s them.
-const standins = process.argv.includes("--e2e") ? new Set(["/cluster/", "/lab/"]) : null;
+const standins = process.argv.includes("--e2e") ? new Set(["/cluster/", "/lab/", "/work/vllm/", "/work/bridge/", "/work/flota/"]) : null;
 const standinBody = () => {
   const html = readFileSync(join(dir, "index.html"), "utf8");
   const head = [...html.matchAll(/<link\s+rel="stylesheet"[^>]*>|<script\s+src="[^"]*"(?![^>]*type="module")[^>]*><\/script>/g)].map((m) => m[0]).join("");

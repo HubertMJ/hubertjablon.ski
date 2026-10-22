@@ -134,6 +134,24 @@ test("moving between the landing page and /lab/ slides like switching desktops: 
   expect(await vt()).toBe("none");
 });
 
+test("a work page slides like the cluster and the lab: opened from the right, home the other way", async ({ page }) => {
+  await page.goto("/");
+  await page.addInitScript(() => {
+    addEventListener("pagereveal", (e) => {
+      const vt = (e as Event & { viewTransition?: { types: Set<string> } | null }).viewTransition;
+      setTimeout(() => ((window as unknown as { vt: string }).vt = vt ? [...vt.types].join(",") || "fade" : "none"));
+    });
+  });
+  const vt = () => page.waitForFunction(() => (window as unknown as { vt?: string }).vt).then((h) => h.jsonValue());
+  for (const href of ["/work/vllm/", "/work/bridge/", "/work/flota/"]) {
+    await page.goto("/");
+    await Promise.all([page.waitForURL(`**${href}`), page.locator(`a[href="${href}"]`).first().click()]);
+    expect(await vt()).toBe("forward");
+    await Promise.all([page.waitForURL((u) => u.pathname === "/"), page.goBack()]);
+    expect(await vt()).toBe("backward");
+  }
+});
+
 test("without cross-document view transitions (Firefox) the page slides by hand: opened from the right, home the other way, back included", async ({ page }) => {
   await page.addInitScript(() => {
     delete (Window.prototype as unknown as { onpagereveal?: unknown }).onpagereveal;

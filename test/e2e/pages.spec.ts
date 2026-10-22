@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { diagramProblems } from "./diagram-check";
 
 // This repository serves only the landing page (/). The detection lab (/lab/) and the cluster
 // (/cluster/) come from other repositories' images; the Gateway serves them at those same-origin
@@ -413,4 +414,18 @@ test("the console greets a person once per page load, without an error", async (
   await page.waitForTimeout(300);
   expect(logs.filter((l) => l.includes("You opened the console")).length).toBe(1);
   expect(errors).toEqual([]);
+});
+
+// "The way in" set in the fonts it ships, measured at phone and desktop widths: the words in their
+// boxes with room, every label clear of boxes, arrowheads, lines and other labels (diagram-check.ts).
+// Tagged @fonts: it runs again with other system fonts (playwright.config.ts, the *-fonts projects).
+test("the entry diagram draws in its own fonts and keeps its clearances at every width @fonts", async ({ page }) => {
+  for (const width of [360, 390, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/");
+    const problems = await diagramProblems(page);
+    expect(await page.evaluate(() => document.fonts.check("650 14px LabDiagramSans") && document.fonts.check("10.5px LabDiagramMono"))).toBe(true);
+    expect(await page.locator("svg.entry-map:visible .em-label").first().evaluate((t) => getComputedStyle(t).fontFamily)).toMatch(/^"?LabDiagramSans/);
+    expect(problems, `at ${width}`).toEqual([]);
+  }
 });

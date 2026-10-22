@@ -35,6 +35,8 @@ const cx = (b: Box) => b.x + b.w / 2;
 const cy = (b: Box) => b.y + b.h / 2;
 /** An arrow stops this short of the box it points at, so the head's tip touches the edge. */
 const GAP = 2;
+/** An arrowhead's length: a label over a line is centred on the shaft before it, never over the head. */
+const HEAD = 11;
 
 export function wide(): Drawing {
   const boxes = new Map<string, Box>();
@@ -53,15 +55,16 @@ export function wide(): Drawing {
     const y = cy(a);
     const x0 = a.x + a.w;
     const x1 = b.x - GAP;
-    edges.push({ pts: [[x0, y], [x1, y]], label: HOPS[i].via ?? "", at: [(x0 + x1) / 2, y - 8], anchor: "middle", tunnel: HOPS[i].tunnel });
+    edges.push({ pts: [[x0, y], [x1, y]], label: HOPS[i].via ?? "", at: [(x0 + x1 - HEAD) / 2, y - 8], anchor: "middle", tunnel: HOPS[i].tunnel });
   }
   const gw = boxes.get("gateway") as Box;
-  const trunk = gw.x + gw.w + 28;
+  // Close to the Gateway, so the longest route ("/cluster/api") has room on its stub before the arrowhead.
+  const trunk = gw.x + gw.w + 14;
   const fan = new Map<string, Edge>();
   for (const d of DESTINATIONS) {
     const b = boxes.get(d.id) as Box;
     const x1 = b.x - GAP;
-    fan.set(d.id, { pts: [[gw.x + gw.w, cy(gw)], [trunk, cy(gw)], [trunk, cy(b)], [x1, cy(b)]], label: d.route, at: [(trunk + x1) / 2, cy(b) - 8], anchor: "middle" });
+    fan.set(d.id, { pts: [[gw.x + gw.w, cy(gw)], [trunk, cy(gw)], [trunk, cy(b)], [x1, cy(b)]], label: d.route, at: [(trunk + x1 - HEAD) / 2, cy(b) - 8], anchor: "middle" });
   }
   const zoneH = destBottom + 18 - 10;
   return {
@@ -114,7 +117,7 @@ export function narrow(): Drawing {
   for (const d of DESTINATIONS) {
     const b = boxes.get(d.id) as Box;
     const x1 = b.x - GAP;
-    fan.set(d.id, { pts: [[gw.x, cy(gw)], [trunk, cy(gw)], [trunk, cy(b)], [x1, cy(b)]], label: d.route, at: [(trunk + x1) / 2, cy(b) - 6], anchor: "middle" });
+    fan.set(d.id, { pts: [[gw.x, cy(gw)], [trunk, cy(gw)], [trunk, cy(b)], [x1, cy(b)]], label: d.route, at: [(trunk + x1 - HEAD) / 2, cy(b) - 8], anchor: "middle" });
   }
   return {
     view: "narrow",

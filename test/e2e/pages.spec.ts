@@ -26,6 +26,18 @@ test.describe("landing page", () => {
     await expect(page).toHaveURL(/\/#about$/);
   });
 
+  test("About carries a card with my profiles elsewhere: three rows, each a whole-row link that leaves the site safely", async ({ page }) => {
+    await page.goto("/");
+    const links = page.locator("#about .elsewhere a");
+    expect(await links.evaluateAll((as) => as.map((a) => a.getAttribute("href")))).toEqual(["https://github.com/HubertMJ", "https://www.linkedin.com/in/hubertmichalj/", "https://app.lfx.dev/u/hubertmj"]);
+    for (const a of await links.all()) {
+      await expect(a).toHaveAttribute("rel", "noopener noreferrer me");
+      expect((await a.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    }
+    await expect(links.last()).toContainText("Linux Foundation");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
+
   test("About lives here alone: the whole text and the tools; the old #skills link lands on them", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator("#about .prose p")).toHaveCount(4);

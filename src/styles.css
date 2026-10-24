@@ -927,6 +927,116 @@ html[data-folded~="projects"] #projects
   font-size: 1.05rem;
 }
 
+/* About in two columns from 1024 px: the text, and beside it the card with my profiles elsewhere,
+   in the column the prose (40rem wide) leaves empty. Below that the card follows the tools. */
+.about__grid {
+  display: grid;
+  gap: 2rem clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .about__grid {
+    grid-template-columns: minmax(0, 40rem) minmax(18rem, 1fr);
+  }
+
+  .elsewhere {
+    position: sticky;
+    top: 5rem;
+  }
+}
+
+/* The card's top edge in the site's own green: this one is about me, not a project. */
+.card--me {
+  border-top-color: var(--accent);
+}
+
+.elsewhere .card__title {
+  font-size: 1.2rem;
+}
+
+.elsewhere__list {
+  display: grid;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.elsewhere__list li + li {
+  border-top: 1px solid var(--border);
+}
+
+/* Each profile is one row and one link: a glyph, its name over what is there, and the handle on
+   the right in mono. The row is the tap target. */
+.elsewhere__list a {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.85rem;
+  min-height: 3.5rem;
+  margin-inline: -0.5rem;
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  text-decoration: none;
+  transition: background-color 0.15s;
+}
+
+.elsewhere__list a:hover {
+  background: var(--surface-2);
+}
+
+.elsewhere__glyph {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--text-faint);
+  transition: color 0.15s;
+}
+
+.elsewhere__list a:hover .elsewhere__glyph {
+  color: var(--accent);
+}
+
+.elsewhere__text {
+  display: grid;
+  min-width: 0;
+}
+
+.elsewhere__name {
+  font-weight: 650;
+}
+
+.elsewhere__what {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.elsewhere__handle {
+  font: 500 0.8rem/1.4 var(--font-mono);
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.elsewhere__handle::after {
+  content: " ↗";
+}
+
+.elsewhere__list a:hover .elsewhere__handle {
+  color: var(--accent);
+}
+
+/* On a phone the handle wraps under the description instead of squeezing it. */
+@media (max-width: 560px) {
+  .elsewhere__list a {
+    grid-template-columns: 1.5rem minmax(0, 1fr);
+  }
+
+  .elsewhere__handle {
+    grid-column: 2;
+    margin-top: 0.2rem;
+  }
+}
+
 .projects {
   display: grid;
   gap: 1rem;
